@@ -12,6 +12,7 @@
 #  Packages:
 #   Go 1.16
 #   NodeJS 14
+#   PostgreSQL 12
 #   serverless
 #   awscli
 #   docker
@@ -82,6 +83,32 @@ usermod -aG docker vagrant
 
 systemctl start docker
 systemctl enable docker
+
+
+#####################
+#
+# Install PostgreSQL
+#
+#####################
+
+# install PostgreSQL
+apt install -y postgresql postgresql-contrib
+apt install -y libpq-dev
+
+# create development user and databases
+su postgres -c "psql -c \"CREATE USER dbuser WITH PASSWORD 'dbpass';\""
+su postgres -c "createdb service_db_dev -O dbuser"
+su postgres -c "createdb service_db_dev -O dbuser"
+
+# allow PostgreSQL access for local development
+ufw allow 5432
+sed -i "s/^#\?listen_addresses =.*/listen_addresses = '*'/g" /etc/postgresql/12/main/postgresql.conf
+echo "
+# Allow all connections - DEVELOPMENT usage only
+host    all             all              0.0.0.0/0                       md5
+host    all             all              ::/0                            md5
+" >> /etc/postgresql/12/main/pg_hba.conf
+systemctl restart postgresql
 
 
 #################
