@@ -12,11 +12,19 @@ frameworkVersion: '2'
 # @todo: remove once upgraded to v3
 useDotenv: true
 
+plugins:
+  - serverless-dynamodb-local
+
 # custom variables - you should change these to your own values
 custom:
   region: ${env:REGION, "us-east-1"}
   domain: ${env:DOMAIN, "domain.com"}
   prefix: ${env:PREFIX, "aws-com-domain"}
+  apiKey: ${env:API_KEY, ""}
+  dynamoDBEndpoint: ${env:DYNAMODB_ENDPOINT, ""}
+  dynamodb:
+    stages:
+      - dev
 
 provider:
   name: aws
@@ -43,3 +51,22 @@ functions:
       - httpApi:
           path: /emails
           method: get
+    environment:
+      API_KEY: ${self:custom.apiKey}
+      DYNAMODB_ENDPOINT: ${self:custom.dynamoDBEndpoint}
+
+resources:
+  Resources:
+    emailsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.prefix}-${opt:stage,'dev'}-emails-table
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: B
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1

@@ -3,6 +3,7 @@
 .vscode/
 .vagrant/
 .serverless/
+.dynamodb/
 services/email/bin/*
 .env*
 *code-workspace

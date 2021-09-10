@@ -15,6 +15,7 @@
 #   PostgreSQL 12
 #   serverless
 #   awscli
+#   java
 #   docker
 #   vim tmux screen git zip build-essential
 #
@@ -49,6 +50,9 @@ apt install -y vim tmux screen git zip build-essential
 # install AWS command line interface
 apt install -y awscli
 
+# install java
+apt install -y default-jre
+
 
 ###################
 #
@@ -70,6 +74,7 @@ su - vagrant -c "source ~/.nvm/nvm.sh; nvm install 14.17.0"
 #####################
 
 su - vagrant -c "source ~/.nvm/nvm.sh; npm install -g serverless"
+su - vagrant -c "source ~/.nvm/nvm.sh; npm install -g serverless-dynamodb-local@0.2.40"
 
 
 #################

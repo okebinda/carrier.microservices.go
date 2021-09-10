@@ -16,6 +16,9 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+// @ref: https://ewanvalentine.io/serverless-start-ups-in-golang-part-1/
+// @ref: https://yos.io/2018/02/08/getting-started-with-serverless-go/
+
 var logger *zap.SugaredLogger
 var adapter *chiproxy.ChiLambda
 
@@ -67,12 +70,16 @@ func authentication(r *http.Request) bool {
 
 // successResponse generates a success (200) response
 func successResponse(w http.ResponseWriter, code int, fields interface{}) {
-	body, err := json.Marshal(fields)
-	if err != nil {
-		logger.Errorf("Marshalling error: %s", err)
-		serverErrorResponse(w)
+	if fields == nil {
+		generateResponse(w, code, nil)
+	} else {
+		body, err := json.Marshal(fields)
+		if err != nil {
+			logger.Errorf("Marshalling error: %s", err)
+			serverErrorResponse(w)
+		}
+		generateResponse(w, code, body)
 	}
-	generateResponse(w, code, body)
 }
 
 // userErrorResponse generates a user error (400) response
