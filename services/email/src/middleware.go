@@ -52,17 +52,23 @@ func EmailCtx(next http.Handler) http.Handler {
 		// Create an email repository
 		emailRepository := NewEmailRepository(emailsTable)
 
-		// retrieve a single email
+		// parse ID from URL into UUID
 		id, err := uuid.Parse(chi.URLParam(r, "emailID"))
 		if err != nil {
 			logger.Errorf("Error creating UUID: %v", err)
 			serverErrorResponse(w)
 		}
 
+		// retrieve a single email
 		email, err := emailRepository.Get(id)
 		if err != nil {
-			logger.Errorf("Unable to find email: %v", err)
-			userErrorResponse(w, 404, "Not found")
+			switch err.(type) {
+			case *NotFoundError:
+				userErrorResponse(w, 404, "Not found")
+			default:
+				logger.Errorf("Unable to retrieve email from datastore: %v", err)
+				serverErrorResponse(w)
+			}
 			return
 		}
 

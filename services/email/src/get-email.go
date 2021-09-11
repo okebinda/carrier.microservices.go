@@ -12,8 +12,8 @@ func GetEmail(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	email, ok := ctx.Value(keyEmail).(*Email)
 	if !ok {
-		userErrorResponse(w, 404, "Not found")
-		return
+		logger.Errorf("Error retrieving email from context")
+		serverErrorResponse(w)
 	}
 
 	// response

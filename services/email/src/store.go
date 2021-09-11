@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -13,6 +15,13 @@ type Datastore interface {
 	List(castTo interface{}) error
 	Get(key uuid.UUID, castTo interface{}) error
 	Store(item interface{}) error
+}
+
+// NotFoundError error type for records not found in the datastore
+type NotFoundError struct{}
+
+func (e *NotFoundError) Error() string {
+	return fmt.Sprintf("Item not found")
 }
 
 // CreateConnection to dynamodb
@@ -88,6 +97,9 @@ func (dt *DynamoDBTable) Get(key uuid.UUID, castTo interface{}) error {
 	})
 	if err != nil {
 		return err
+	}
+	if result.Item == nil {
+		return &NotFoundError{}
 	}
 	if err := dynamodbattribute.UnmarshalMap(result.Item, &castTo); err != nil {
 		return err
