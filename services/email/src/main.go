@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-lambda-go/lambdacontext"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
 	chiproxy "github.com/awslabs/aws-lambda-go-api-proxy/chi"
 	"github.com/go-chi/chi"
 	"go.uber.org/zap"
@@ -21,8 +22,18 @@ import (
 
 var logger *zap.SugaredLogger
 var adapter *chiproxy.ChiLambda
+var db *dynamodb.DynamoDB
 
 func init() {
+	var err error
+
+	// connect to datastore
+	db, err = CreateConnection(os.Getenv("DYNAMODB_ENDPOINT"))
+	if err != nil {
+		log.Fatalf("Database connection error: %s", err)
+	}
+
+	// setup routes
 	r := chi.NewRouter()
 
 	r.Get("/emails", GetEmails)

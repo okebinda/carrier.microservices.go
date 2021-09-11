@@ -26,24 +26,23 @@ func CreateConnection(endpoint string) (*dynamodb.DynamoDB, error) {
 	return dynamodb.New(sess), nil
 }
 
-// DynamoDB is a concrete implementation
-// to interface with common DynamoDB operations
-type DynamoDB struct {
+// DynamoDBTable is a reference to a specific table in DynamoDB
+type DynamoDBTable struct {
 	table string
 	conn  *dynamodb.DynamoDB
 }
 
-// NewDynamoDB - creates new dynamodb instance
-func NewDynamoDB(conn *dynamodb.DynamoDB, table string) *DynamoDB {
-	return &DynamoDB{
+// NewDynamoDBTable creates a new reference to a DynamoDB table
+func NewDynamoDBTable(conn *dynamodb.DynamoDB, table string) *DynamoDBTable {
+	return &DynamoDBTable{
 		conn: conn, table: table,
 	}
 }
 
 // List gets a collection of resources
-func (ddb *DynamoDB) List(castTo interface{}) error {
-	results, err := ddb.conn.Scan(&dynamodb.ScanInput{
-		TableName: aws.String(ddb.table),
+func (dt *DynamoDBTable) List(castTo interface{}) error {
+	results, err := dt.conn.Scan(&dynamodb.ScanInput{
+		TableName: aws.String(dt.table),
 	})
 	if err != nil {
 		return err
@@ -55,16 +54,16 @@ func (ddb *DynamoDB) List(castTo interface{}) error {
 }
 
 // Store a new Item
-func (ddb *DynamoDB) Store(item interface{}) error {
+func (dt *DynamoDBTable) Store(item interface{}) error {
 	av, err := dynamodbattribute.MarshalMap(item)
 	if err != nil {
 		return err
 	}
 	input := &dynamodb.PutItemInput{
 		Item:      av,
-		TableName: aws.String(ddb.table),
+		TableName: aws.String(dt.table),
 	}
-	_, err = ddb.conn.PutItem(input)
+	_, err = dt.conn.PutItem(input)
 	if err != nil {
 		return err
 	}
@@ -72,15 +71,15 @@ func (ddb *DynamoDB) Store(item interface{}) error {
 }
 
 // Get an item
-func (ddb *DynamoDB) Get(key uuid.UUID, castTo interface{}) error {
+func (dt *DynamoDBTable) Get(key uuid.UUID, castTo interface{}) error {
 
 	id, err := key.MarshalBinary()
 	if err != nil {
 		return err
 	}
 
-	result, err := ddb.conn.GetItem(&dynamodb.GetItemInput{
-		TableName: aws.String(ddb.table),
+	result, err := dt.conn.GetItem(&dynamodb.GetItemInput{
+		TableName: aws.String(dt.table),
 		Key: map[string]*dynamodb.AttributeValue{
 			"id": {
 				B: id,
