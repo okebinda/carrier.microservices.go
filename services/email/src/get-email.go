@@ -7,7 +7,7 @@ import (
 // GetEmail retrieves a single emails
 func GetEmail(w http.ResponseWriter, r *http.Request) {
 
-	logger.Infow("GetEmail called")
+	logger.Debugw("GetEmail called")
 
 	ctx := r.Context()
 	email, ok := ctx.Value(keyEmail).(*Email)

@@ -64,8 +64,27 @@ The service uses `.env` files to configure custom values in the `serverless.yml`
 DOMAIN=domain.com
 PREFIX=aws-com-domain
 REGION=us-east-1
+
+LOG_LEVEL=info
+LOG_ENCODING=json
 API_KEY=
+DYNAMODB_ENDPOINT=
 ```
+
+Options for LOG_LEVEL:
+
+* fatal
+* panic
+* dpanic
+* error
+* warn
+* info
+* debug
+
+Options for LOG_ENCODING:
+
+* json
+* console
 
 ### Install Dependencies
 

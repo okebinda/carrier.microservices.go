@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -37,6 +39,7 @@ func init() {
 	r := chi.NewRouter()
 
 	r.Route("/", func(r chi.Router) {
+		r.Use(LogRequest)
 		r.Use(Authorize)
 		r.Route("/email/{emailID}", func(r chi.Router) {
 			r.Use(EmailCtx)
@@ -64,13 +67,37 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 
 // sugaredLogger initializes the zap sugar logger
 func sugaredLogger(requestID string) *zap.SugaredLogger {
-	// zapLogger, err := zap.NewDevelopment()
-	zapLogger, err := zap.NewProduction()
+	logConfig := []byte(fmt.Sprintf(`{
+			"level": "%s",
+			"encoding": "%s",
+			"outputPaths": ["stdout"],
+			"errorOutputPaths": ["stderr"],
+			"encoderConfig": {
+				"messageKey": "message",
+				"levelKey": "level",
+				"levelEncoder": "lowercase"
+			}
+		}`,
+		os.Getenv("LOG_LEVEL"),
+		os.Getenv("LOG_ENCODING"),
+	))
+
+	var cfg zap.Config
+	if err := json.Unmarshal(logConfig, &cfg); err != nil {
+		panic(err)
+	}
+	zapLogger, err := cfg.Build()
+	if err != nil {
+		panic(err)
+	}
+	defer zapLogger.Sync()
+
 	if err != nil {
 		log.Fatalf("can't initialize zap logger: %v", err)
 	}
 	return zapLogger.
 		With(zap.Field{Key: "request_id", Type: zapcore.StringType, String: requestID}).
+		With(zap.Field{Key: "timestamp", Type: zapcore.StringType, String: time.Now().Format("2006-01-02T15:04:05.999999999Z07:00")}).
 		Sugar()
 }
 

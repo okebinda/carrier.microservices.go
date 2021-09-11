@@ -15,6 +15,21 @@ const (
 	keyEmail key = iota
 )
 
+// LogRequest logs the request
+func LogRequest(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		// check API key
+		logger.Infow("Request",
+			"Method", r.Method,
+			"RequestURI", r.RequestURI,
+			"RemoteAddr", r.RemoteAddr,
+		)
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 // Authorize checks if the request contains the proper authentication token
 func Authorize(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

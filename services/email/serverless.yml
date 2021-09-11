@@ -20,6 +20,8 @@ custom:
   region: ${env:REGION, "us-east-1"}
   domain: ${env:DOMAIN, "domain.com"}
   prefix: ${env:PREFIX, "aws-com-domain"}
+  logLevel: ${env:LOG_LEVEL, "error"}
+  logEncoding: ${env:LOG_ENCODING, "json"}
   apiKey: ${env:API_KEY, ""}
   dynamoDBEndpoint: ${env:DYNAMODB_ENDPOINT, ""}
   dynamodb:
@@ -52,6 +54,8 @@ functions:
           path: /emails
           method: get
     environment:
+      LOG_LEVEL: ${self:custom.logLevel}
+      LOG_ENCODING: ${self:custom.logEncoding}
       API_KEY: ${self:custom.apiKey}
       DYNAMODB_ENDPOINT: ${self:custom.dynamoDBEndpoint}
 

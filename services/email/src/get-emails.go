@@ -8,7 +8,7 @@ import (
 // GetEmails retrieves a list of emails
 func GetEmails(w http.ResponseWriter, r *http.Request) {
 
-	logger.Infow("GetEmails called")
+	logger.Debugw("GetEmails called")
 
 	// get instance of emails table
 	emailsTable := NewDynamoDBTable(db, "aws-com-kchevalier-dev-emails-table")
