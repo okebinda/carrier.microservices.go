@@ -36,8 +36,15 @@ func init() {
 	// setup routes
 	r := chi.NewRouter()
 
-	r.Get("/emails", GetEmails)
-	// r.Post("/emails", PostEmails)
+	r.Route("/", func(r chi.Router) {
+		r.Use(Authorize)
+		r.Route("/email/{emailID}", func(r chi.Router) {
+			r.Use(EmailCtx)
+			r.Get("/", GetEmail)
+		})
+		r.Get("/emails", GetEmails)
+		// r.Post("/emails", PostEmails)
+	})
 
 	adapter = chiproxy.New(r)
 }
@@ -65,18 +72,6 @@ func sugaredLogger(requestID string) *zap.SugaredLogger {
 	return zapLogger.
 		With(zap.Field{Key: "request_id", Type: zapcore.StringType, String: requestID}).
 		Sugar()
-}
-
-// authentication checks the request headers for an X-API-KEY value and compares it to env parameter
-func authentication(r *http.Request) bool {
-	APIKey := os.Getenv("API_KEY")
-	if APIKey != "" {
-		headerAPIKey := r.Header.Get("X-API-KEY")
-		if headerAPIKey != APIKey {
-			return false
-		}
-	}
-	return true
 }
 
 // successResponse generates a success (200) response

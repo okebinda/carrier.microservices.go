@@ -5,17 +5,10 @@ import (
 	// "github.com/google/uuid"
 )
 
-// GetEmails retrieves a lst of emails
+// GetEmails retrieves a list of emails
 func GetEmails(w http.ResponseWriter, r *http.Request) {
 
 	logger.Infow("GetEmails called")
-
-	// check API key
-	ok := authentication(r)
-	if !ok {
-		userErrorResponse(w, 403, "Permission denied.")
-		return
-	}
 
 	// get instance of emails table
 	emailsTable := NewDynamoDBTable(db, "aws-com-kchevalier-dev-emails-table")
@@ -46,20 +39,6 @@ func GetEmails(w http.ResponseWriter, r *http.Request) {
 		logger.Errorf("List emails error: %v", err)
 		userErrorResponse(w, 404, "Not found")
 	}
-
-	// // retrieve a single email
-	// id, err := uuid.Parse("ef7f232d-e100-4552-9b80-a6fd587ade36")
-	// if err != nil {
-	// 	logger.Errorf("Error creating UUID: %v", err)
-	// 	serverErrorResponse(w)
-	// }
-
-	// email, err := emailRepository.Get(id)
-	// if err != nil {
-	// 	logger.Errorf("Unable to find email: %v", err)
-	// 	userErrorResponse(w, 404, "Not found")
-	// 	return
-	// }
 
 	// response
 	successResponse(w, 200, map[string]interface{}{
