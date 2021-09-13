@@ -49,8 +49,8 @@ func (r *EmailRepository) Store(email *Email) error {
 }
 
 // List all emails
-func (r *EmailRepository) List() (*[]Email, error) {
-	var emails *[]Email
+func (r *EmailRepository) List() ([]*Email, error) {
+	var emails []*Email
 	if err := r.datastore.List(&emails); err != nil {
 		return nil, err
 	}
