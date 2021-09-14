@@ -46,7 +46,7 @@ func init() {
 			r.Get("/", GetEmail)
 		})
 		r.Get("/emails", GetEmails)
-		// r.Post("/emails", PostEmails)
+		r.Post("/emails", PostEmails)
 	})
 
 	adapter = chiproxy.New(r)

@@ -1,8 +1,12 @@
 package main
 
 import (
+	"encoding/json"
+	// "fmt"
+	// "io"
 	"net/http"
 	// "github.com/google/uuid"
+	"carrier.microservices.go/src/lib/validation"
 )
 
 // GetEmails retrieves a list of emails
@@ -15,23 +19,6 @@ func GetEmails(w http.ResponseWriter, r *http.Request) {
 
 	// Create an email repository
 	emailRepository := NewEmailRepository(emailsTable)
-
-	// // create a new test email
-	// email := Email{
-	// 	To:      []string{"test1@test.com", "test2@test.com"},
-	// 	CC:      []string{"test3@test.com"},
-	// 	Subject: "Hello",
-	// 	From:    "test4@test.com",
-	// 	ReplyTo: "test5@test.com",
-	// 	Body:    "Lorem ipsum.",
-	// }
-
-	// // save email
-	// err := emailRepository.Store(&email)
-	// if err != nil {
-	// 	logger.Errorf("Unable to save email: %v", err)
-	// 	serverErrorResponse(w)
-	// }
 
 	// retrieve a list of emails
 	emails, err := emailRepository.List()
@@ -82,6 +69,58 @@ func GetEmail(w http.ResponseWriter, r *http.Request) {
 
 	// response
 	successResponse(w, 200, EmailResponseSchema{
+		Email: emailPayload,
+	})
+}
+
+// PostEmails creates a new email record
+func PostEmails(w http.ResponseWriter, r *http.Request) {
+	var payload EmailRequestSchema
+	var err error
+
+	logger.Debugw("PostEmails called")
+
+	// get payload from request body
+	defer r.Body.Close()
+	decoder := json.NewDecoder(r.Body)
+	if err = decoder.Decode(&payload); err != nil {
+		userErrorResponse(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+
+	// validate payload
+	if ok, errorMap := validation.Check(payload); !ok {
+		output, _ := json.Marshal(errorMap)
+		generateResponse(w, http.StatusBadRequest, output)
+		return
+	}
+
+	// get instance of email repository
+	emailRepository := NewEmailRepository(NewDynamoDBTable(db, "aws-com-kchevalier-dev-emails-table"))
+
+	// create a new email record
+	email := Email{
+		To:      payload.To,
+		CC:      payload.CC,
+		Subject: payload.Subject,
+		From:    payload.From,
+		ReplyTo: payload.ReplyTo,
+		Body:    payload.Body,
+	}
+
+	// save email
+	err = emailRepository.Store(&email)
+	if err != nil {
+		logger.Errorf("Unable to save email: %v", err)
+		serverErrorResponse(w)
+	}
+
+	// map result to response payload
+	emailPayload := EmailSchema{}
+	emailPayload.load(&email)
+
+	// response
+	successResponse(w, 201, EmailResponseSchema{
 		Email: emailPayload,
 	})
 }

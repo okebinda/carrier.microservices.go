@@ -5,12 +5,15 @@ import (
 	// "carrier.microservices.go/src/lib/datetime"
 )
 
-// // AppKeyAdminRequestSchema defines the input validation schema for admin AppKey JSON requests.
-// type AppKeyAdminRequestSchema struct {
-// 	Application string `json:"application" validate:"required,min=2,max=200"`
-// 	Key         string `json:"key" validate:"required,len=32"`
-// 	Status      int16  `json:"status" validate:"required,numeric,min=1,max=5"`
-// }
+// EmailRequestSchema defines the input validation schema for Email JSON requests.
+type EmailRequestSchema struct {
+	To      []string `json:"to" validate:"required,min=1,dive,required,email"`
+	CC      []string `json:"cc" validate:"dive,email"`
+	Subject string   `json:"subject" validate:"required,min=2,max=255"`
+	From    string   `json:"from" validate:"required,email"`
+	ReplyTo string   `json:"reply_to" validate:"email"`
+	Body    string   `json:"body" validate:"required"`
+}
 
 // EmailSchema defines the JSON schema for the Email model.
 type EmailSchema struct {

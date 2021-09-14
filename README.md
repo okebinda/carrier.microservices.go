@@ -116,6 +116,11 @@ $ cd /workspace/services/email
 $ sls invoke local --function email --data '{"httpMethod":"GET", "path":"email/ef7f232d-e100-4552-9b80-a6fd587ade36", "queryStringParameters": {}}'
 ```
 
+```ssh
+$ cd /workspace/services/email
+$ sls invoke local --function email --data '{"httpMethod":"POST", "path":"emails", "body":"{\"to\":[\"test@test.com\"],\"cc\":[\"test2@test.com\"],\"subject\":\"Test Subject\",\"from\":\"test3@test.com\",\"reply_to\":\"test4@test.com\",\"body\":\"Test body.\"}", "queryStringParameters": {}}'
+```
+
 ### Use
 
 #### 0) Authentication
