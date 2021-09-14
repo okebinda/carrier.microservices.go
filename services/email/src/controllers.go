@@ -2,9 +2,9 @@ package main
 
 import (
 	"encoding/json"
-	// "fmt"
-	// "io"
 	"net/http"
+	"time"
+
 	// "github.com/google/uuid"
 	"carrier.microservices.go/src/lib/validation"
 )
@@ -100,12 +100,14 @@ func PostEmails(w http.ResponseWriter, r *http.Request) {
 
 	// create a new email record
 	email := Email{
-		To:      payload.To,
-		CC:      payload.CC,
-		Subject: payload.Subject,
-		From:    payload.From,
-		ReplyTo: payload.ReplyTo,
-		Body:    payload.Body,
+		To:        payload.To,
+		CC:        payload.CC,
+		Subject:   payload.Subject,
+		From:      payload.From,
+		ReplyTo:   payload.ReplyTo,
+		Body:      payload.Body,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 
 	// save email

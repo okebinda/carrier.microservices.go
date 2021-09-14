@@ -1,27 +1,23 @@
 package main
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 )
 
 // Email is an email entity
 type Email struct {
-	ID      uuid.UUID `json:"id"`
-	To      []string  `json:"to"`
-	CC      []string  `json:"cc"`
-	Subject string    `json:"subject"`
-	From    string    `json:"from"`
-	ReplyTo string    `json:"reply_to"`
-	Body    string    `json:"body"`
+	ID        uuid.UUID `json:"id"`
+	To        []string  `json:"to"`
+	CC        []string  `json:"cc"`
+	Subject   string    `json:"subject"`
+	From      string    `json:"from"`
+	ReplyTo   string    `json:"reply_to"`
+	Body      string    `json:"body"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
-
-// // EmailRepository handle the persistence of emails
-// type EmailRepository interface {
-// 	List(page, limit int) ([]Email, error)
-// 	FindByID(id uuid.UUID) (Email, error)
-// 	Save(email Email) error
-// 	Delete(id uuid.UUID) error
-// }
 
 // NewEmailRepository instance
 func NewEmailRepository(ds Datastore) *EmailRepository {

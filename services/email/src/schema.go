@@ -1,8 +1,8 @@
 package main
 
 import (
+	"carrier.microservices.go/src/lib/datetime"
 	"github.com/google/uuid"
-	// "carrier.microservices.go/src/lib/datetime"
 )
 
 // EmailRequestSchema defines the input validation schema for Email JSON requests.
@@ -17,15 +17,15 @@ type EmailRequestSchema struct {
 
 // EmailSchema defines the JSON schema for the Email model.
 type EmailSchema struct {
-	ID      uuid.UUID `json:"id"`
-	To      []string  `json:"to"`
-	CC      []string  `json:"cc"`
-	Subject string    `json:"subject"`
-	From    string    `json:"from"`
-	ReplyTo string    `json:"reply_to"`
-	Body    string    `json:"body"`
-	// CreatedAt   datetime.JSONTime `json:"created_at"`
-	// UpdatedAt   datetime.JSONTime `json:"updated_at"`
+	ID        uuid.UUID         `json:"id"`
+	To        []string          `json:"to"`
+	CC        []string          `json:"cc"`
+	Subject   string            `json:"subject"`
+	From      string            `json:"from"`
+	ReplyTo   string            `json:"reply_to"`
+	Body      string            `json:"body"`
+	CreatedAt datetime.JSONTime `json:"created_at"`
+	UpdatedAt datetime.JSONTime `json:"updated_at"`
 }
 
 // Loads an Email record into EmailSchema.
@@ -37,8 +37,8 @@ func (s *EmailSchema) load(m *Email) {
 	s.From = m.From
 	s.ReplyTo = m.ReplyTo
 	s.Body = m.Body
-	// p.CreatedAt = datetime.JSONTime(m.CreatedAt)
-	// p.UpdatedAt = datetime.JSONTime(m.UpdatedAt)
+	s.CreatedAt = datetime.JSONTime(m.CreatedAt)
+	s.UpdatedAt = datetime.JSONTime(m.UpdatedAt)
 }
 
 // EmailResponseSchema defines the response schema for a single Email record.
