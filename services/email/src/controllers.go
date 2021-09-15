@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"os"
 	"time"
 
 	// "github.com/google/uuid"
@@ -14,11 +15,8 @@ func GetEmails(w http.ResponseWriter, r *http.Request) {
 
 	logger.Debugw("GetEmails called")
 
-	// get instance of emails table
-	emailsTable := NewDynamoDBTable(db, "aws-com-kchevalier-dev-emails-table")
-
-	// Create an email repository
-	emailRepository := NewEmailRepository(emailsTable)
+	// get instance of email repository
+	emailRepository := NewEmailRepository(NewDynamoDBTable(db, os.Getenv("EMAILS_TABLE")))
 
 	// retrieve a list of emails
 	emails, err := emailRepository.List()
@@ -96,7 +94,7 @@ func PostEmails(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get instance of email repository
-	emailRepository := NewEmailRepository(NewDynamoDBTable(db, "aws-com-kchevalier-dev-emails-table"))
+	emailRepository := NewEmailRepository(NewDynamoDBTable(db, os.Getenv("EMAILS_TABLE")))
 
 	// create a new email record
 	email := Email{

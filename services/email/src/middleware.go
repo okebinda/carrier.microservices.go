@@ -61,11 +61,8 @@ func authentication(r *http.Request) bool {
 func EmailCtx(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		// get instance of emails table
-		emailsTable := NewDynamoDBTable(db, "aws-com-kchevalier-dev-emails-table")
-
-		// Create an email repository
-		emailRepository := NewEmailRepository(emailsTable)
+		// get instance of email repository
+		emailRepository := NewEmailRepository(NewDynamoDBTable(db, os.Getenv("EMAILS_TABLE")))
 
 		// parse ID from URL into UUID
 		id, err := uuid.Parse(chi.URLParam(r, "emailID"))

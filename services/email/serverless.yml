@@ -58,13 +58,14 @@ functions:
       LOG_ENCODING: ${self:custom.logEncoding}
       API_KEY: ${self:custom.apiKey}
       DYNAMODB_ENDPOINT: ${self:custom.dynamoDBEndpoint}
+      EMAILS_TABLE: ${self:custom.prefix}-${opt:stage,'dev'}-dt-emails
 
 resources:
   Resources:
     emailsTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:custom.prefix}-${opt:stage,'dev'}-emails-table
+        TableName: ${self:custom.prefix}-${opt:stage,'dev'}-dt-emails
         AttributeDefinitions:
           - AttributeName: id
             AttributeType: B
