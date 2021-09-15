@@ -23,6 +23,7 @@ func GetEmails(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.Errorf("List emails error: %v", err)
 		userErrorResponse(w, 404, "Not found")
+		return
 	}
 
 	// map results to response payload
@@ -39,29 +40,6 @@ func GetEmails(w http.ResponseWriter, r *http.Request) {
 		Page:   1,
 		Limit:  10,
 		Total:  1,
-	})
-}
-
-// GetEmail retrieves a single emails
-func GetEmail(w http.ResponseWriter, r *http.Request) {
-
-	logger.Debugw("GetEmail called")
-
-	// get email from context
-	ctx := r.Context()
-	email, ok := ctx.Value(keyEmail).(*Email)
-	if !ok {
-		logger.Errorf("Error retrieving email from context")
-		serverErrorResponse(w)
-	}
-
-	// map result to response payload
-	emailPayload := EmailSchema{}
-	emailPayload.load(email)
-
-	// response
-	successResponse(w, 200, EmailResponseSchema{
-		Email: emailPayload,
 	})
 }
 
@@ -107,6 +85,7 @@ func PostEmails(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.Errorf("Unable to save email: %v", err)
 		serverErrorResponse(w)
+		return
 	}
 
 	// map result to response payload
@@ -115,6 +94,90 @@ func PostEmails(w http.ResponseWriter, r *http.Request) {
 
 	// response
 	successResponse(w, 201, EmailResponseSchema{
+		Email: emailPayload,
+	})
+}
+
+// GetEmail retrieves a single emails
+func GetEmail(w http.ResponseWriter, r *http.Request) {
+
+	logger.Debugw("GetEmail called")
+
+	// get email from context
+	ctx := r.Context()
+	email, ok := ctx.Value(keyEmail).(*Email)
+	if !ok {
+		logger.Errorf("Error retrieving email from context")
+		serverErrorResponse(w)
+		return
+	}
+
+	// map result to response payload
+	emailPayload := EmailSchema{}
+	emailPayload.load(email)
+
+	// response
+	successResponse(w, 200, EmailResponseSchema{
+		Email: emailPayload,
+	})
+}
+
+// UpdateEmail updates a single emails
+func UpdateEmail(w http.ResponseWriter, r *http.Request) {
+	var payload EmailRequestSchema
+	var err error
+
+	logger.Debugw("UpdateEmail called")
+
+	// get email from context
+	ctx := r.Context()
+	email, ok := ctx.Value(keyEmail).(*Email)
+	if !ok {
+		logger.Errorf("Error retrieving email from context")
+		serverErrorResponse(w)
+		return
+	}
+
+	// get payload from request body
+	defer r.Body.Close()
+	decoder := json.NewDecoder(r.Body)
+	if err = decoder.Decode(&payload); err != nil {
+		userErrorResponse(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+
+	// validate payload
+	if ok, errorMap := validation.Check(payload); !ok {
+		output, _ := json.Marshal(errorMap)
+		generateResponse(w, http.StatusBadRequest, output)
+		return
+	}
+
+	// get instance of email repository
+	emailRepository := NewEmailRepository(store.NewDynamoDBTable(db, os.Getenv("EMAILS_TABLE")))
+
+	// create a new email record
+	email.To = payload.To
+	email.CC = payload.CC
+	email.Subject = payload.Subject
+	email.From = payload.From
+	email.ReplyTo = payload.ReplyTo
+	email.Body = payload.Body
+
+	// save email
+	err = emailRepository.Update(email)
+	if err != nil {
+		logger.Errorf("Unable to update email: %v", err)
+		serverErrorResponse(w)
+		return
+	}
+
+	// map result to response payload
+	emailPayload := EmailSchema{}
+	emailPayload.load(email)
+
+	// response
+	successResponse(w, 200, EmailResponseSchema{
 		Email: emailPayload,
 	})
 }

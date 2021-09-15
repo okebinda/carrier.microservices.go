@@ -113,12 +113,17 @@ $ sls invoke local --function email --data '{"httpMethod":"GET", "path":"emails"
 
 ```ssh
 $ cd /workspace/services/email
-$ sls invoke local --function email --data '{"httpMethod":"GET", "path":"email/20923cbd-6e75-4704-9dfd-ccc67461a673", "queryStringParameters": {}}'
+$ sls invoke local --function email --data '{"httpMethod":"POST", "path":"emails", "body":"{\"to\":[\"test@test.com\"],\"cc\":[\"test2@test.com\"],\"subject\":\"Test Subject\",\"from\":\"test3@test.com\",\"reply_to\":\"test4@test.com\",\"body\":\"Test body.\"}", "queryStringParameters": {}}'
 ```
 
 ```ssh
 $ cd /workspace/services/email
-$ sls invoke local --function email --data '{"httpMethod":"POST", "path":"emails", "body":"{\"to\":[\"test@test.com\"],\"cc\":[\"test2@test.com\"],\"subject\":\"Test Subject\",\"from\":\"test3@test.com\",\"reply_to\":\"test4@test.com\",\"body\":\"Test body.\"}", "queryStringParameters": {}}'
+$ sls invoke local --function email --data '{"httpMethod":"GET", "path":"email/48acbccd-11fa-4692-bab9-50fbbdc523b0", "queryStringParameters": {}}'
+```
+
+```ssh
+$ cd /workspace/services/email
+$ sls invoke local --function email --data '{"httpMethod":"PUT", "path":"email/48acbccd-11fa-4692-bab9-50fbbdc523b0", "body":"{\"to\":[\"testb@test.com\"],\"cc\":[\"test2b@test.com\"],\"subject\":\"Test Subject 1\",\"from\":\"test3b@test.com\",\"reply_to\":\"test4b@test.com\",\"body\":\"Test body 1.\"}", "queryStringParameters": {}}'
 ```
 
 ### Use

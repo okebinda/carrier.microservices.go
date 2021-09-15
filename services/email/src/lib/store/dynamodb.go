@@ -90,3 +90,31 @@ func (dt *DynamoDBTable) Get(key uuid.UUID, castTo interface{}) error {
 	}
 	return nil
 }
+
+// Update an item
+func (dt *DynamoDBTable) Update(key uuid.UUID, attributes map[string]*dynamodb.AttributeValue, expression string) error {
+	var err error
+
+	id, err := key.MarshalBinary()
+	if err != nil {
+		return err
+	}
+
+	_, err = dt.conn.UpdateItem(&dynamodb.UpdateItemInput{
+		TableName: aws.String(dt.table),
+		Key: map[string]*dynamodb.AttributeValue{
+			"id": {
+				B: id,
+			},
+		},
+		ExpressionAttributeValues: attributes,
+		UpdateExpression:          aws.String(expression),
+	})
+	if err != nil {
+		return err
+	}
+	// if err := dynamodbattribute.UnmarshalMap(result.Item, &castTo); err != nil {
+	// 	return err
+	// }
+	return nil
+}

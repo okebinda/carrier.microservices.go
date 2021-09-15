@@ -45,6 +45,7 @@ func init() {
 		r.Route("/email/{emailID}", func(r chi.Router) {
 			r.Use(EmailCtx)
 			r.Get("/", GetEmail)
+			r.Put("/", UpdateEmail)
 		})
 		r.Get("/emails", GetEmails)
 		r.Post("/emails", PostEmails)
