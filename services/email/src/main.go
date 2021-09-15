@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 
+	"carrier.microservices.go/src/lib/store"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-lambda-go/lambdacontext"
@@ -30,7 +31,7 @@ func init() {
 	var err error
 
 	// connect to datastore
-	db, err = CreateConnection(os.Getenv("DYNAMODB_ENDPOINT"))
+	db, err = store.CreateConnection(os.Getenv("DYNAMODB_ENDPOINT"))
 	if err != nil {
 		log.Fatalf("Database connection error: %s", err)
 	}

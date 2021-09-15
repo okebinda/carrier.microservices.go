@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 
+	"carrier.microservices.go/src/lib/store"
 	"github.com/go-chi/chi"
 	"github.com/google/uuid"
 )
@@ -62,7 +63,7 @@ func EmailCtx(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// get instance of email repository
-		emailRepository := NewEmailRepository(NewDynamoDBTable(db, os.Getenv("EMAILS_TABLE")))
+		emailRepository := NewEmailRepository(store.NewDynamoDBTable(db, os.Getenv("EMAILS_TABLE")))
 
 		// parse ID from URL into UUID
 		id, err := uuid.Parse(chi.URLParam(r, "emailID"))
@@ -75,7 +76,7 @@ func EmailCtx(next http.Handler) http.Handler {
 		email, err := emailRepository.Get(id)
 		if err != nil {
 			switch err.(type) {
-			case *NotFoundError:
+			case *store.NotFoundError:
 				userErrorResponse(w, 404, "Not found")
 			default:
 				logger.Errorf("Unable to retrieve email from datastore: %v", err)

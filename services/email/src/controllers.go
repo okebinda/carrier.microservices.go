@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	// "github.com/google/uuid"
+	"carrier.microservices.go/src/lib/store"
 	"carrier.microservices.go/src/lib/validation"
 )
 
@@ -16,7 +16,7 @@ func GetEmails(w http.ResponseWriter, r *http.Request) {
 	logger.Debugw("GetEmails called")
 
 	// get instance of email repository
-	emailRepository := NewEmailRepository(NewDynamoDBTable(db, os.Getenv("EMAILS_TABLE")))
+	emailRepository := NewEmailRepository(store.NewDynamoDBTable(db, os.Getenv("EMAILS_TABLE")))
 
 	// retrieve a list of emails
 	emails, err := emailRepository.List()
@@ -40,12 +40,6 @@ func GetEmails(w http.ResponseWriter, r *http.Request) {
 		Limit:  10,
 		Total:  1,
 	})
-
-	// // response
-	// successResponse(w, 200, map[string]interface{}{
-	// 	"emails": emails,
-	// 	// "email": email,
-	// })
 }
 
 // GetEmail retrieves a single emails
@@ -94,7 +88,7 @@ func PostEmails(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get instance of email repository
-	emailRepository := NewEmailRepository(NewDynamoDBTable(db, os.Getenv("EMAILS_TABLE")))
+	emailRepository := NewEmailRepository(store.NewDynamoDBTable(db, os.Getenv("EMAILS_TABLE")))
 
 	// create a new email record
 	email := Email{

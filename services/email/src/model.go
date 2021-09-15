@@ -3,6 +3,7 @@ package main
 import (
 	"time"
 
+	"carrier.microservices.go/src/lib/store"
 	"github.com/google/uuid"
 )
 
@@ -19,14 +20,14 @@ type Email struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-// NewEmailRepository instance
-func NewEmailRepository(ds Datastore) *EmailRepository {
-	return &EmailRepository{datastore: ds}
-}
-
 // EmailRepository stores and fetches items
 type EmailRepository struct {
-	datastore Datastore
+	datastore store.Datastore
+}
+
+// NewEmailRepository instance
+func NewEmailRepository(ds store.Datastore) *EmailRepository {
+	return &EmailRepository{datastore: ds}
 }
 
 // Get a single email
