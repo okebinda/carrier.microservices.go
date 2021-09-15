@@ -3,10 +3,7 @@ package main
 import (
 	"time"
 
-	// "carrier.microservices.go/src/lib/datetime"
 	"carrier.microservices.go/src/lib/store"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/google/uuid"
 )
 
@@ -58,34 +55,6 @@ func (r *EmailRepository) List() ([]*Email, error) {
 }
 
 // Update an existing email
-func (r *EmailRepository) Update(email *Email) error {
-	return r.datastore.Update(
-		email.ID,
-		map[string]*dynamodb.AttributeValue{
-			":to": {
-				SS: aws.StringSlice(email.To),
-			},
-			":cc": {
-				SS: aws.StringSlice(email.CC),
-			},
-			":subject": {
-				S: aws.String(email.Subject),
-			},
-			":from": {
-				S: aws.String(email.From),
-			},
-			":reply_to": {
-				S: aws.String(email.ReplyTo),
-			},
-			":body": {
-				S: aws.String(email.Body),
-			},
-			// ":updated_at": {
-			// 	// S: aws.String(datetime.JSONTime(time.Now())),
-			// 	S: aws.String(time.Now().Format(datetime.ISO8601Datetime)),
-			// },
-		},
-		// "set to_=:to, cc=:cc, subject=:subject, from_=:from, reply_to=:reply_to, body=:body, updated_at=:updated_at",
-		"set to_=:to, cc=:cc, subject=:subject, from_=:from, reply_to=:reply_to, body=:body",
-	)
+func (r *EmailRepository) Update(email *Email, changeSet store.ChangeSet) error {
+	return r.datastore.Update(email.ID, email, changeSet)
 }

@@ -1,6 +1,10 @@
 package store
 
 import (
+	"fmt"
+	"strings"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -92,29 +96,61 @@ func (dt *DynamoDBTable) Get(key uuid.UUID, castTo interface{}) error {
 }
 
 // Update an item
-func (dt *DynamoDBTable) Update(key uuid.UUID, attributes map[string]*dynamodb.AttributeValue, expression string) error {
+func (dt *DynamoDBTable) Update(key uuid.UUID, castTo interface{}, changeSet ChangeSet) error {
 	var err error
 
+	// get binary value of ID
 	id, err := key.MarshalBinary()
 	if err != nil {
 		return err
 	}
 
-	_, err = dt.conn.UpdateItem(&dynamodb.UpdateItemInput{
+	// initialize vars that dictate update behavior
+	updateAttributes := map[string]*dynamodb.AttributeValue{}
+	updateExpressions := []string{}
+
+	// loop over change set and build update vars
+	for k, v := range changeSet {
+		placeholder := fmt.Sprintf(":%s", k)
+		switch v.(type) {
+		case string:
+			updateAttributes[placeholder] = &dynamodb.AttributeValue{
+				S: aws.String(v.(string)),
+			}
+		case []string:
+			placeholder := fmt.Sprintf(":%s", k)
+			updateAttributes[placeholder] = &dynamodb.AttributeValue{
+				SS: aws.StringSlice(v.([]string)),
+			}
+		case time.Time:
+			placeholder := fmt.Sprintf(":%s", k)
+			updateAttributes[placeholder] = &dynamodb.AttributeValue{
+				S: aws.String(v.(time.Time).Format("2006-01-02T15:04:05Z07:00")),
+			}
+		}
+		updateExpressions = append(updateExpressions, fmt.Sprintf("%s=:%s", k, k))
+	}
+
+	// perform update
+	result, err := dt.conn.UpdateItem(&dynamodb.UpdateItemInput{
 		TableName: aws.String(dt.table),
 		Key: map[string]*dynamodb.AttributeValue{
 			"id": {
 				B: id,
 			},
 		},
-		ExpressionAttributeValues: attributes,
-		UpdateExpression:          aws.String(expression),
+		ExpressionAttributeValues: updateAttributes,
+		UpdateExpression:          aws.String(fmt.Sprintf("set %s", strings.Join(updateExpressions, ", "))),
+		ReturnValues:              aws.String("ALL_NEW"),
 	})
 	if err != nil {
 		return err
 	}
-	// if err := dynamodbattribute.UnmarshalMap(result.Item, &castTo); err != nil {
-	// 	return err
-	// }
+
+	// update original object with updated values
+	if err = dynamodbattribute.UnmarshalMap(result.Attributes, &castTo); err != nil {
+		return err
+	}
+
 	return nil
 }

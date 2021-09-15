@@ -13,6 +13,7 @@ type ctf struct {
 
 var customTypeFuncs []*ctf
 
+// AddCustomTypeFunc ...
 func AddCustomTypeFunc(function validator.CustomTypeFunc, customType interface{}) {
 	customTypeFuncs = append(customTypeFuncs, &ctf{function, customType})
 }

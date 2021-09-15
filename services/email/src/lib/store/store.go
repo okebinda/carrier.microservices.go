@@ -3,7 +3,6 @@ package store
 import (
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/google/uuid"
 )
 
@@ -12,7 +11,7 @@ type Datastore interface {
 	List(castTo interface{}) error
 	Get(key uuid.UUID, castTo interface{}) error
 	Store(item interface{}) error
-	Update(key uuid.UUID, attributes map[string]*dynamodb.AttributeValue, expression string) error
+	Update(key uuid.UUID, castTo interface{}, changeSet ChangeSet) error
 }
 
 // NotFoundError error type for records not found in the datastore
@@ -21,3 +20,6 @@ type NotFoundError struct{}
 func (e *NotFoundError) Error() string {
 	return fmt.Sprintf("Item not found")
 }
+
+// ChangeSet is a generic interface to map attribute changes
+type ChangeSet map[string]interface{}

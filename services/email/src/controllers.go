@@ -156,16 +156,19 @@ func UpdateEmail(w http.ResponseWriter, r *http.Request) {
 	// get instance of email repository
 	emailRepository := NewEmailRepository(store.NewDynamoDBTable(db, os.Getenv("EMAILS_TABLE")))
 
-	// create a new email record
-	email.To = payload.To
-	email.CC = payload.CC
-	email.Subject = payload.Subject
-	email.From = payload.From
-	email.ReplyTo = payload.ReplyTo
-	email.Body = payload.Body
+	// create change set for email
+	changeSet := store.ChangeSet{
+		"to_":        payload.To,
+		"cc":         payload.CC,
+		"subject":    payload.Subject,
+		"from_":      payload.From,
+		"reply_to":   payload.ReplyTo,
+		"body":       payload.Body,
+		"updated_at": time.Now(),
+	}
 
 	// save email
-	err = emailRepository.Update(email)
+	err = emailRepository.Update(email, changeSet)
 	if err != nil {
 		logger.Errorf("Unable to update email: %v", err)
 		serverErrorResponse(w)
