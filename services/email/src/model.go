@@ -30,21 +30,6 @@ func NewEmailRepository(ds store.Datastore) *EmailRepository {
 	return &EmailRepository{datastore: ds}
 }
 
-// Get a single email
-func (r *EmailRepository) Get(id uuid.UUID) (*Email, error) {
-	var email *Email
-	if err := r.datastore.Get(id, &email); err != nil {
-		return nil, err
-	}
-	return email, nil
-}
-
-// Store a new email
-func (r *EmailRepository) Store(email *Email) error {
-	email.ID = uuid.New()
-	return r.datastore.Store(email)
-}
-
 // List all emails
 func (r *EmailRepository) List() ([]*Email, error) {
 	var emails []*Email
@@ -54,7 +39,25 @@ func (r *EmailRepository) List() ([]*Email, error) {
 	return emails, nil
 }
 
+// Store a new email
+func (r *EmailRepository) Store(email *Email) error {
+	email.ID = uuid.New()
+	email.CreatedAt = time.Now()
+	email.UpdatedAt = time.Now()
+	return r.datastore.Store(email)
+}
+
+// Get a single email
+func (r *EmailRepository) Get(id uuid.UUID) (*Email, error) {
+	var email *Email
+	if err := r.datastore.Get(id, &email); err != nil {
+		return nil, err
+	}
+	return email, nil
+}
+
 // Update an existing email
 func (r *EmailRepository) Update(email *Email, changeSet store.ChangeSet) error {
+	changeSet["updated_at"] = time.Now()
 	return r.datastore.Update(email.ID, email, changeSet)
 }

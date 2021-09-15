@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
-	"time"
 
 	"carrier.microservices.go/src/lib/store"
 	"carrier.microservices.go/src/lib/validation"
@@ -70,14 +69,12 @@ func PostEmails(w http.ResponseWriter, r *http.Request) {
 
 	// create a new email record
 	email := Email{
-		To:        payload.To,
-		CC:        payload.CC,
-		Subject:   payload.Subject,
-		From:      payload.From,
-		ReplyTo:   payload.ReplyTo,
-		Body:      payload.Body,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		To:      payload.To,
+		CC:      payload.CC,
+		Subject: payload.Subject,
+		From:    payload.From,
+		ReplyTo: payload.ReplyTo,
+		Body:    payload.Body,
 	}
 
 	// save email
@@ -158,13 +155,12 @@ func UpdateEmail(w http.ResponseWriter, r *http.Request) {
 
 	// create change set for email
 	changeSet := store.ChangeSet{
-		"to_":        payload.To,
-		"cc":         payload.CC,
-		"subject":    payload.Subject,
-		"from_":      payload.From,
-		"reply_to":   payload.ReplyTo,
-		"body":       payload.Body,
-		"updated_at": time.Now(),
+		"to_":      payload.To,
+		"cc":       payload.CC,
+		"subject":  payload.Subject,
+		"from_":    payload.From,
+		"reply_to": payload.ReplyTo,
+		"body":     payload.Body,
 	}
 
 	// save email
