@@ -94,19 +94,13 @@ func PostEmails(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// GetEmail retrieves a single emails
+// GetEmail retrieves a single email
 func GetEmail(w http.ResponseWriter, r *http.Request) {
 
 	logger.Debugw("GetEmail called")
 
 	// get email from context
-	ctx := r.Context()
-	email, ok := ctx.Value(keyEmail).(*Email)
-	if !ok {
-		logger.Errorf("Error retrieving email from context")
-		serverErrorResponse(w)
-		return
-	}
+	email := r.Context().Value(keyEmail).(*Email)
 
 	// map result to response payload
 	emailPayload := EmailSchema{}
@@ -118,7 +112,7 @@ func GetEmail(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// UpdateEmail updates a single emails
+// UpdateEmail updates a single email
 func UpdateEmail(w http.ResponseWriter, r *http.Request) {
 	var payload EmailRequestSchema
 	var err error
@@ -127,12 +121,7 @@ func UpdateEmail(w http.ResponseWriter, r *http.Request) {
 
 	// get email from context
 	ctx := r.Context()
-	email, ok := ctx.Value(keyEmail).(*Email)
-	if !ok {
-		logger.Errorf("Error retrieving email from context")
-		serverErrorResponse(w)
-		return
-	}
+	email := ctx.Value(keyEmail).(*Email)
 
 	// get payload from request body
 	defer r.Body.Close()
@@ -150,7 +139,7 @@ func UpdateEmail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get email repository from context
-	emailRepository := r.Context().Value(keyEmailRepository).(func() *EmailRepository)()
+	emailRepository := ctx.Value(keyEmailRepository).(func() *EmailRepository)()
 
 	// create change set for email
 	changeSet := store.ChangeSet{
@@ -180,7 +169,7 @@ func UpdateEmail(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// DeleteEmail deletes a single emails
+// DeleteEmail deletes a single email
 func DeleteEmail(w http.ResponseWriter, r *http.Request) {
 	var err error
 
@@ -188,15 +177,10 @@ func DeleteEmail(w http.ResponseWriter, r *http.Request) {
 
 	// get email from context
 	ctx := r.Context()
-	email, ok := ctx.Value(keyEmail).(*Email)
-	if !ok {
-		logger.Errorf("Error retrieving email from context")
-		serverErrorResponse(w)
-		return
-	}
+	email := ctx.Value(keyEmail).(*Email)
 
 	// get email repository from context
-	emailRepository := r.Context().Value(keyEmailRepository).(func() *EmailRepository)()
+	emailRepository := ctx.Value(keyEmailRepository).(func() *EmailRepository)()
 
 	// delete email
 	err = emailRepository.Delete(email.ID)
