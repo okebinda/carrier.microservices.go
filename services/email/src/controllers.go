@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"net/http"
-	"os"
 
 	"carrier.microservices.go/src/lib/store"
 	"carrier.microservices.go/src/lib/validation"
@@ -14,8 +13,8 @@ func GetEmails(w http.ResponseWriter, r *http.Request) {
 
 	logger.Debugw("GetEmails called")
 
-	// get instance of email repository
-	emailRepository := NewEmailRepository(store.NewDynamoDBTable(db, os.Getenv("EMAILS_TABLE")))
+	// get email repository from context
+	emailRepository := r.Context().Value(keyEmailRepository).(func() *EmailRepository)()
 
 	// retrieve a list of emails
 	emails, err := emailRepository.List()
@@ -64,8 +63,8 @@ func PostEmails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// get instance of email repository
-	emailRepository := NewEmailRepository(store.NewDynamoDBTable(db, os.Getenv("EMAILS_TABLE")))
+	// get email repository from context
+	emailRepository := r.Context().Value(keyEmailRepository).(func() *EmailRepository)()
 
 	// create a new email record
 	email := Email{
@@ -150,8 +149,8 @@ func UpdateEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// get instance of email repository
-	emailRepository := NewEmailRepository(store.NewDynamoDBTable(db, os.Getenv("EMAILS_TABLE")))
+	// get email repository from context
+	emailRepository := r.Context().Value(keyEmailRepository).(func() *EmailRepository)()
 
 	// create change set for email
 	changeSet := store.ChangeSet{
@@ -196,8 +195,8 @@ func DeleteEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// get instance of email repository
-	emailRepository := NewEmailRepository(store.NewDynamoDBTable(db, os.Getenv("EMAILS_TABLE")))
+	// get email repository from context
+	emailRepository := r.Context().Value(keyEmailRepository).(func() *EmailRepository)()
 
 	// delete email
 	err = emailRepository.Delete(email.ID)

@@ -14,6 +14,7 @@ type key int
 
 const (
 	keyEmail key = iota
+	keyEmailRepository
 )
 
 // LogRequest logs the request
@@ -58,12 +59,23 @@ func authentication(r *http.Request) bool {
 	return true
 }
 
+// EmailRepositoryCtx adds a hepler function to the context to generate an instance of the EmailRepository
+func EmailRepositoryCtx(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		getEmailRepository := func() *EmailRepository {
+			return NewEmailRepository(store.NewDynamoDBTable(db, os.Getenv("EMAILS_TABLE")))
+		}
+		ctx := context.WithValue(r.Context(), keyEmailRepository, getEmailRepository)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
 // EmailCtx adds an Email object to the context if requested
 func EmailCtx(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		// get instance of email repository
-		emailRepository := NewEmailRepository(store.NewDynamoDBTable(db, os.Getenv("EMAILS_TABLE")))
+		// get email repository from context
+		emailRepository := r.Context().Value(keyEmailRepository).(func() *EmailRepository)()
 
 		// parse ID from URL into UUID
 		id, err := uuid.Parse(chi.URLParam(r, "emailID"))

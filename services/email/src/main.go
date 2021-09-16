@@ -42,6 +42,7 @@ func init() {
 	r.Route("/", func(r chi.Router) {
 		r.Use(LogRequest)
 		r.Use(Authorize)
+		r.Use(EmailRepositoryCtx)
 		r.Route("/email/{emailID}", func(r chi.Router) {
 			r.Use(EmailCtx)
 			r.Get("/", GetEmail)
