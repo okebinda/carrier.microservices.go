@@ -61,3 +61,8 @@ func (r *EmailRepository) Update(email *Email, changeSet store.ChangeSet) error 
 	changeSet["updated_at"] = time.Now()
 	return r.datastore.Update(email.ID, email, changeSet)
 }
+
+// Delete an existing email
+func (r *EmailRepository) Delete(id uuid.UUID) error {
+	return r.datastore.Delete(id)
+}

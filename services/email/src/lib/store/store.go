@@ -9,9 +9,10 @@ import (
 // Datastore is a generic interface for a datastore
 type Datastore interface {
 	List(castTo interface{}) error
-	Get(key uuid.UUID, castTo interface{}) error
 	Store(item interface{}) error
+	Get(key uuid.UUID, castTo interface{}) error
 	Update(key uuid.UUID, castTo interface{}, changeSet ChangeSet) error
+	Delete(key uuid.UUID) error
 }
 
 // NotFoundError error type for records not found in the datastore

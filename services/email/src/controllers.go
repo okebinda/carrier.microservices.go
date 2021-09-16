@@ -180,3 +180,33 @@ func UpdateEmail(w http.ResponseWriter, r *http.Request) {
 		Email: emailPayload,
 	})
 }
+
+// DeleteEmail deletes a single emails
+func DeleteEmail(w http.ResponseWriter, r *http.Request) {
+	var err error
+
+	logger.Debugw("DeleteEmail called")
+
+	// get email from context
+	ctx := r.Context()
+	email, ok := ctx.Value(keyEmail).(*Email)
+	if !ok {
+		logger.Errorf("Error retrieving email from context")
+		serverErrorResponse(w)
+		return
+	}
+
+	// get instance of email repository
+	emailRepository := NewEmailRepository(store.NewDynamoDBTable(db, os.Getenv("EMAILS_TABLE")))
+
+	// delete email
+	err = emailRepository.Delete(email.ID)
+	if err != nil {
+		logger.Errorf("Unable to delete email: %v", err)
+		serverErrorResponse(w)
+		return
+	}
+
+	// response
+	successResponse(w, 204, nil)
+}

@@ -46,6 +46,7 @@ func init() {
 			r.Use(EmailCtx)
 			r.Get("/", GetEmail)
 			r.Put("/", UpdateEmail)
+			r.Delete("/", DeleteEmail)
 		})
 		r.Get("/emails", GetEmails)
 		r.Post("/emails", PostEmails)

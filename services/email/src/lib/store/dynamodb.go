@@ -154,3 +154,26 @@ func (dt *DynamoDBTable) Update(key uuid.UUID, castTo interface{}, changeSet Cha
 
 	return nil
 }
+
+// Delete an item
+func (dt *DynamoDBTable) Delete(key uuid.UUID) error {
+
+	id, err := key.MarshalBinary()
+	if err != nil {
+		return err
+	}
+
+	_, err = dt.conn.DeleteItem(&dynamodb.DeleteItemInput{
+		TableName: aws.String(dt.table),
+		Key: map[string]*dynamodb.AttributeValue{
+			"id": {
+				B: id,
+			},
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
