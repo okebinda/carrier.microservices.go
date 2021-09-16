@@ -8,7 +8,7 @@ import (
 
 // Datastore is a generic interface for a datastore
 type Datastore interface {
-	List(castTo interface{}) error
+	List(castTo interface{}, page, limit int64) error
 	Store(item interface{}) error
 	Get(key uuid.UUID, castTo interface{}) error
 	Update(key uuid.UUID, castTo interface{}, changeSet ChangeSet) error

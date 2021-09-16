@@ -37,13 +37,32 @@ func NewDynamoDBTable(conn *dynamodb.DynamoDB, table string) *DynamoDBTable {
 }
 
 // List gets a collection of resources
-func (dt *DynamoDBTable) List(castTo interface{}) error {
+func (dt *DynamoDBTable) List(castTo interface{}, page, limit int64) error {
+
+	// get first page of results
+	currentPage := int64(1)
 	results, err := dt.conn.Scan(&dynamodb.ScanInput{
 		TableName: aws.String(dt.table),
+		Limit:     aws.Int64(limit),
 	})
 	if err != nil {
 		return err
 	}
+
+	// support for pagination: beyond page 1
+	for currentPage < page && len(results.LastEvaluatedKey) > 0 {
+		results, err = dt.conn.Scan(&dynamodb.ScanInput{
+			TableName:         aws.String(dt.table),
+			Limit:             aws.Int64(limit),
+			ExclusiveStartKey: results.LastEvaluatedKey,
+		})
+		if err != nil {
+			return err
+		}
+		currentPage++
+	}
+
+	// populate output with results
 	if err := dynamodbattribute.UnmarshalListOfMaps(results.Items, &castTo); err != nil {
 		return err
 	}

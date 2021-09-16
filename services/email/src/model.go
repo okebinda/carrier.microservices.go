@@ -31,9 +31,9 @@ func NewEmailRepository(ds store.Datastore) *EmailRepository {
 }
 
 // List all emails
-func (r *EmailRepository) List() ([]*Email, error) {
+func (r *EmailRepository) List(page, limit int64) ([]*Email, error) {
 	var emails []*Email
-	if err := r.datastore.List(&emails); err != nil {
+	if err := r.datastore.List(&emails, page, limit); err != nil {
 		return nil, err
 	}
 	return emails, nil

@@ -49,7 +49,6 @@ type EmailResponseSchema struct {
 // EmailListResponseSchema defines the response schema for a list of Email records.
 type EmailListResponseSchema struct {
 	Emails []EmailSchema `json:"emails"`
-	Page   int           `json:"page"`
-	Limit  int           `json:"limit"`
-	Total  int           `json:"total"`
+	Page   int64         `json:"page"`
+	Limit  int64         `json:"limit"`
 }

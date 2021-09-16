@@ -10,7 +10,7 @@
 #  https://www.ubuntu.com/
 #
 #  Packages:
-#   Go 1.16
+#   Go 1.17
 #   NodeJS 14
 #   PostgreSQL 12
 #   serverless
@@ -122,7 +122,8 @@ systemctl restart postgresql
 #
 #################
 
-wget -c https://golang.org/dl/go1.16.4.linux-amd64.tar.gz -O - | sudo tar -xz -C /usr/local
+# wget -c https://golang.org/dl/go1.16.4.linux-amd64.tar.gz -O - | sudo tar -xz -C /usr/local
+wget -c https://golang.org/dl/go1.17.1.linux-amd64.tar.gz -O - | sudo tar -xz -C /usr/local
 
 echo "
 # GO vars

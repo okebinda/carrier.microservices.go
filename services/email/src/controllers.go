@@ -10,14 +10,30 @@ import (
 
 // GetEmails retrieves a list of emails
 func GetEmails(w http.ResponseWriter, r *http.Request) {
+	var page, limit int64
+	var err error
 
 	logger.Debugw("GetEmails called")
+
+	// get page from query string
+	page, err = GetQueryParamInt64(r, "page", 1)
+	if err != nil || page < 1 {
+		userErrorResponse(w, http.StatusBadRequest, "Invalid value for query parameter: page")
+		return
+	}
+
+	// get limit from query string
+	limit, err = GetQueryParamInt64(r, "limit", 25)
+	if err != nil || limit < 1 || limit > 200 {
+		userErrorResponse(w, http.StatusBadRequest, "Invalid value for query parameter: limit")
+		return
+	}
 
 	// get email repository from context
 	emailRepository := r.Context().Value(keyEmailRepository).(func() *EmailRepository)()
 
 	// retrieve a list of emails
-	emails, err := emailRepository.List()
+	emails, err := emailRepository.List(page, limit)
 	if err != nil {
 		logger.Errorf("List emails error: %v", err)
 		userErrorResponse(w, 404, "Not found")
@@ -35,9 +51,8 @@ func GetEmails(w http.ResponseWriter, r *http.Request) {
 	// response
 	successResponse(w, 200, EmailListResponseSchema{
 		Emails: emailsPayload,
-		Page:   1,
-		Limit:  10,
-		Total:  1,
+		Page:   page,
+		Limit:  limit,
 	})
 }
 
