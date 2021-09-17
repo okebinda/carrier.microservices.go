@@ -7,17 +7,34 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+
+	// EmailStatusQueued is a status constant for new/queued emails
+	EmailStatusQueued = 1
+
+	// EmailStatusComplete is a status constant for emails that have been successfully sent
+	EmailStatusComplete = 2
+
+	// EmailStatusFailed is a status constant for emails that have failed to be sent and should not be tried again
+	EmailStatusFailed = 3
+)
+
 // Email is an email entity
 type Email struct {
-	ID        uuid.UUID `json:"id"`
-	To        []string  `json:"to_"`
-	CC        []string  `json:"cc"`
-	Subject   string    `json:"subject"`
-	From      string    `json:"from_"`
-	ReplyTo   string    `json:"reply_to"`
-	Body      string    `json:"body"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID            uuid.UUID `json:"id"`
+	To            []string  `json:"to_"`
+	CC            []string  `json:"cc"`
+	Subject       string    `json:"subject"`
+	From          string    `json:"from_"`
+	ReplyTo       string    `json:"reply_to"`
+	Body          string    `json:"body"`
+	Status        int       `json:"status_"`
+	Attempts      int       `json:"attempts"`
+	Accepted      int       `json:"accepted"`
+	Rejected      int       `json:"rejected"`
+	LastAttemptAt time.Time `json:"last_attempt_at"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }
 
 // EmailRepository stores and fetches items

@@ -13,19 +13,25 @@ type EmailRequestSchema struct {
 	From    string   `json:"from" validate:"required,email"`
 	ReplyTo string   `json:"reply_to" validate:"email"`
 	Body    string   `json:"body" validate:"required"`
+	Status  int      `json:"status" validate:"required,numeric,gte=1,lte=3"`
 }
 
 // EmailSchema defines the JSON schema for the Email model.
 type EmailSchema struct {
-	ID        uuid.UUID         `json:"id"`
-	To        []string          `json:"to"`
-	CC        []string          `json:"cc"`
-	Subject   string            `json:"subject"`
-	From      string            `json:"from"`
-	ReplyTo   string            `json:"reply_to"`
-	Body      string            `json:"body"`
-	CreatedAt datetime.JSONTime `json:"created_at"`
-	UpdatedAt datetime.JSONTime `json:"updated_at"`
+	ID            uuid.UUID         `json:"id"`
+	To            []string          `json:"to"`
+	CC            []string          `json:"cc"`
+	Subject       string            `json:"subject"`
+	From          string            `json:"from"`
+	ReplyTo       string            `json:"reply_to"`
+	Body          string            `json:"body"`
+	Status        int               `json:"status"`
+	Attempts      int               `json:"attempts"`
+	Accepted      int               `json:"accepted"`
+	Rejected      int               `json:"rejected"`
+	LastAttemptAt datetime.JSONTime `json:"last_attempt_at"`
+	CreatedAt     datetime.JSONTime `json:"created_at"`
+	UpdatedAt     datetime.JSONTime `json:"updated_at"`
 }
 
 // Loads an Email record into EmailSchema.
@@ -37,6 +43,11 @@ func (s *EmailSchema) load(m *Email) {
 	s.From = m.From
 	s.ReplyTo = m.ReplyTo
 	s.Body = m.Body
+	s.Status = m.Status
+	s.Attempts = m.Attempts
+	s.Accepted = m.Accepted
+	s.Rejected = m.Rejected
+	s.LastAttemptAt = datetime.JSONTime(m.LastAttemptAt)
 	s.CreatedAt = datetime.JSONTime(m.CreatedAt)
 	s.UpdatedAt = datetime.JSONTime(m.UpdatedAt)
 }

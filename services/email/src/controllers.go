@@ -89,6 +89,7 @@ func PostEmails(w http.ResponseWriter, r *http.Request) {
 		From:    payload.From,
 		ReplyTo: payload.ReplyTo,
 		Body:    payload.Body,
+		Status:  payload.Status,
 	}
 
 	// save email
@@ -164,6 +165,7 @@ func UpdateEmail(w http.ResponseWriter, r *http.Request) {
 		"from_":    payload.From,
 		"reply_to": payload.ReplyTo,
 		"body":     payload.Body,
+		"status":   payload.Status,
 	}
 
 	// save email
