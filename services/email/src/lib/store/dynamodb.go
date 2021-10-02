@@ -141,6 +141,10 @@ func (dt *DynamoDBTable) Update(key uuid.UUID, castTo interface{}, changeSet Cha
 			updateAttributes[placeholder] = &dynamodb.AttributeValue{
 				N: aws.String(strconv.Itoa(v.(int))),
 			}
+		case bool:
+			updateAttributes[placeholder] = &dynamodb.AttributeValue{
+				BOOL: aws.Bool(v.(bool)),
+			}
 		case []string:
 			updateAttributes[placeholder] = &dynamodb.AttributeValue{
 				SS: aws.StringSlice(v.([]string)),
@@ -151,7 +155,6 @@ func (dt *DynamoDBTable) Update(key uuid.UUID, castTo interface{}, changeSet Cha
 				return err
 			}
 			updateAttributes[placeholder] = &dynamodb.AttributeValue{
-				// M: aws.StringValueMap(v.(map[string]string)),
 				M: val,
 			}
 		case time.Time:

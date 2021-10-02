@@ -75,3 +75,8 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
+        # GlobalSecondaryIndexes:
+        #   IndexName: ${self:custom.prefix}-${opt:stage,'dev'}-dt-emails-idx-incomplete
+        #   KeySchema:
+        #     - AttributeName: id
+        #       KeyType: HASH

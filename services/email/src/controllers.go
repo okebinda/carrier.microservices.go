@@ -87,6 +87,7 @@ func PostEmails(w http.ResponseWriter, r *http.Request) {
 		Template:      payload.Template,
 		Substitutions: payload.Substitutions,
 		SendStatus:    payload.SendStatus,
+		Incomplete:    payload.Incomplete,
 	}
 
 	// save email
@@ -160,6 +161,7 @@ func UpdateEmail(w http.ResponseWriter, r *http.Request) {
 		"template":      payload.Template,
 		"substitutions": payload.Substitutions,
 		"send_status":   payload.SendStatus,
+		"incomplete":    payload.Incomplete,
 	}
 
 	logger.Debugf("Email: %v", email)

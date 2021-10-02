@@ -26,6 +26,7 @@ type Email struct {
 	Template      string            `json:"template"`
 	Substitutions map[string]string `json:"substitutions"`
 	SendStatus    int               `json:"send_status"`
+	Incomplete    bool              `json:"incomplete"`
 	Attempts      int               `json:"attempts"`
 	Accepted      int               `json:"accepted"`
 	Rejected      int               `json:"rejected"`

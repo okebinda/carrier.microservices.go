@@ -124,17 +124,17 @@ $ sls invoke local --function email --data '{"httpMethod":"POST", "path":"emails
 
 ```ssh
 $ cd /workspace/services/email
-$ sls invoke local --function email --data '{"httpMethod":"GET", "path":"email/f8b1f065-a06c-42ba-956a-e9629912ddc5", "queryStringParameters": {}}'
+$ sls invoke local --function email --data '{"httpMethod":"GET", "path":"email/d553d036-8c80-47af-8a46-b659f3883754", "queryStringParameters": {}}'
 ```
 
 ```ssh
 $ cd /workspace/services/email
-$ sls invoke local --function email --data '{"httpMethod":"PUT", "path":"email/f8b1f065-a06c-42ba-956a-e9629912ddc5", "body":"{\"recipients\":[\"testa@test.com\"],\"template\":\"template-1a\",\"substitutions\":{\"key1\":\"value 1a\",\"key2\":\"value 2a\"},\"send_status\":2}", "queryStringParameters": {}}'
+$ sls invoke local --function email --data '{"httpMethod":"PUT", "path":"email/d553d036-8c80-47af-8a46-b659f3883754", "body":"{\"recipients\":[\"testa@test.com\"],\"template\":\"template-1a\",\"substitutions\":{\"key1\":\"value 1a\",\"key2\":\"value 2a\"},\"send_status\":2,\"incomplete\":true}", "queryStringParameters": {}}'
 ```
 
 ```ssh
 $ cd /workspace/services/email
-$ sls invoke local --function email --data '{"httpMethod":"DELETE", "path":"email/f8b1f065-a06c-42ba-956a-e9629912ddc5", "queryStringParameters": {}}'
+$ sls invoke local --function email --data '{"httpMethod":"DELETE", "path":"email/d553d036-8c80-47af-8a46-b659f3883754", "queryStringParameters": {}}'
 ```
 
 ### Use
