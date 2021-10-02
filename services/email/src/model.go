@@ -21,20 +21,17 @@ const (
 
 // Email is an email entity
 type Email struct {
-	ID            uuid.UUID `json:"id"`
-	To            []string  `json:"to_"`
-	CC            []string  `json:"cc"`
-	Subject       string    `json:"subject"`
-	From          string    `json:"from_"`
-	ReplyTo       string    `json:"reply_to"`
-	Body          string    `json:"body"`
-	Status        int       `json:"status_"`
-	Attempts      int       `json:"attempts"`
-	Accepted      int       `json:"accepted"`
-	Rejected      int       `json:"rejected"`
-	LastAttemptAt time.Time `json:"last_attempt_at"`
-	CreatedAt     time.Time `json:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at"`
+	ID            uuid.UUID         `json:"id"`
+	Recipients    []string          `json:"recipients"`
+	Template      string            `json:"template"`
+	Substitutions map[string]string `json:"substitutions"`
+	SendStatus    int               `json:"send_status"`
+	Attempts      int               `json:"attempts"`
+	Accepted      int               `json:"accepted"`
+	Rejected      int               `json:"rejected"`
+	LastAttemptAt time.Time         `json:"last_attempt_at"`
+	CreatedAt     time.Time         `json:"created_at"`
+	UpdatedAt     time.Time         `json:"updated_at"`
 }
 
 // EmailRepository stores and fetches items

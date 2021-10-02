@@ -2,6 +2,7 @@ package store
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -136,13 +137,24 @@ func (dt *DynamoDBTable) Update(key uuid.UUID, castTo interface{}, changeSet Cha
 			updateAttributes[placeholder] = &dynamodb.AttributeValue{
 				S: aws.String(v.(string)),
 			}
+		case int:
+			updateAttributes[placeholder] = &dynamodb.AttributeValue{
+				N: aws.String(strconv.Itoa(v.(int))),
+			}
 		case []string:
-			placeholder := fmt.Sprintf(":%s", k)
 			updateAttributes[placeholder] = &dynamodb.AttributeValue{
 				SS: aws.StringSlice(v.([]string)),
 			}
+		case map[string]string:
+			val, err := dynamodbattribute.MarshalMap(v.(map[string]string))
+			if err != nil {
+				return err
+			}
+			updateAttributes[placeholder] = &dynamodb.AttributeValue{
+				// M: aws.StringValueMap(v.(map[string]string)),
+				M: val,
+			}
 		case time.Time:
-			placeholder := fmt.Sprintf(":%s", k)
 			updateAttributes[placeholder] = &dynamodb.AttributeValue{
 				S: aws.String(v.(time.Time).Format("2006-01-02T15:04:05Z07:00")),
 			}

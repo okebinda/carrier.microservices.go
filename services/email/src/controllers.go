@@ -83,13 +83,10 @@ func PostEmails(w http.ResponseWriter, r *http.Request) {
 
 	// create a new email record
 	email := Email{
-		To:      payload.To,
-		CC:      payload.CC,
-		Subject: payload.Subject,
-		From:    payload.From,
-		ReplyTo: payload.ReplyTo,
-		Body:    payload.Body,
-		Status:  payload.Status,
+		Recipients:    payload.Recipients,
+		Template:      payload.Template,
+		Substitutions: payload.Substitutions,
+		SendStatus:    payload.SendStatus,
 	}
 
 	// save email
@@ -159,14 +156,14 @@ func UpdateEmail(w http.ResponseWriter, r *http.Request) {
 
 	// create change set for email
 	changeSet := store.ChangeSet{
-		"to_":      payload.To,
-		"cc":       payload.CC,
-		"subject":  payload.Subject,
-		"from_":    payload.From,
-		"reply_to": payload.ReplyTo,
-		"body":     payload.Body,
-		"status":   payload.Status,
+		"recipients":    payload.Recipients,
+		"template":      payload.Template,
+		"substitutions": payload.Substitutions,
+		"send_status":   payload.SendStatus,
 	}
+
+	logger.Debugf("Email: %v", email)
+	logger.Debugf("Data: %v", changeSet)
 
 	// save email
 	err = emailRepository.Update(email, changeSet)

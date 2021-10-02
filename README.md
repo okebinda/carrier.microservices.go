@@ -93,6 +93,12 @@ $ cd /workspace/services/email
 $ ./scripts/build.sh
 ```
 
+### Start local DynamoDB instance
+
+```
+$ sls dynamodb start --migrate
+```
+
 ### Compile
 
 ```ssh
@@ -113,22 +119,22 @@ $ sls invoke local --function email --data '{"httpMethod":"GET", "path":"emails"
 
 ```ssh
 $ cd /workspace/services/email
-$ sls invoke local --function email --data '{"httpMethod":"POST", "path":"emails", "body":"{\"to\":[\"test@test.com\"],\"cc\":[\"test2@test.com\"],\"subject\":\"Test Subject\",\"from\":\"test3@test.com\",\"reply_to\":\"test4@test.com\",\"body\":\"Test body.\",\"status\":1}", "queryStringParameters": {}}'
+$ sls invoke local --function email --data '{"httpMethod":"POST", "path":"emails", "body":"{\"recipients\":[\"test@test.com\"],\"template\":\"template-1\",\"substitutions\":{\"key1\":\"value 1\",\"key2\":\"value 2\"},\"send_status\":1}", "queryStringParameters": {}}'
 ```
 
 ```ssh
 $ cd /workspace/services/email
-$ sls invoke local --function email --data '{"httpMethod":"GET", "path":"email/e844cda3-eb6a-4f0b-839a-d043e99031f6", "queryStringParameters": {}}'
+$ sls invoke local --function email --data '{"httpMethod":"GET", "path":"email/f8b1f065-a06c-42ba-956a-e9629912ddc5", "queryStringParameters": {}}'
 ```
 
 ```ssh
 $ cd /workspace/services/email
-$ sls invoke local --function email --data '{"httpMethod":"PUT", "path":"email/e844cda3-eb6a-4f0b-839a-d043e99031f6", "body":"{\"to\":[\"testb@test.com\"],\"cc\":[\"test2b@test.com\"],\"subject\":\"Test Subject 1\",\"from\":\"test3b@test.com\",\"reply_to\":\"test4b@test.com\",\"body\":\"Test body 1.\"}", "queryStringParameters": {}}'
+$ sls invoke local --function email --data '{"httpMethod":"PUT", "path":"email/f8b1f065-a06c-42ba-956a-e9629912ddc5", "body":"{\"recipients\":[\"testa@test.com\"],\"template\":\"template-1a\",\"substitutions\":{\"key1\":\"value 1a\",\"key2\":\"value 2a\"},\"send_status\":2}", "queryStringParameters": {}}'
 ```
 
 ```ssh
 $ cd /workspace/services/email
-$ sls invoke local --function email --data '{"httpMethod":"DELETE", "path":"email/e844cda3-eb6a-4f0b-839a-d043e99031f6", "queryStringParameters": {}}'
+$ sls invoke local --function email --data '{"httpMethod":"DELETE", "path":"email/f8b1f065-a06c-42ba-956a-e9629912ddc5", "queryStringParameters": {}}'
 ```
 
 ### Use
