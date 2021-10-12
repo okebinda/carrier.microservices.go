@@ -129,6 +129,9 @@ func (dt *DynamoDBTable) Update(key uuid.UUID, castTo interface{}, changeSet Cha
 	updateAttributes := map[string]*dynamodb.AttributeValue{}
 	updateExpressions := []string{}
 
+	// initialize vars that dictate remove behavior
+	removeAttributes := []string{}
+
 	// loop over change set and build update vars
 	for k, v := range changeSet {
 		placeholder := fmt.Sprintf(":%s", k)
@@ -137,18 +140,28 @@ func (dt *DynamoDBTable) Update(key uuid.UUID, castTo interface{}, changeSet Cha
 			updateAttributes[placeholder] = &dynamodb.AttributeValue{
 				S: aws.String(v.(string)),
 			}
+			updateExpressions = append(updateExpressions, fmt.Sprintf("%s=:%s", k, k))
 		case int:
 			updateAttributes[placeholder] = &dynamodb.AttributeValue{
 				N: aws.String(strconv.Itoa(v.(int))),
 			}
+			updateExpressions = append(updateExpressions, fmt.Sprintf("%s=:%s", k, k))
 		case bool:
-			updateAttributes[placeholder] = &dynamodb.AttributeValue{
-				BOOL: aws.Bool(v.(bool)),
+			val := v.(bool)
+			if val {
+				updateAttributes[placeholder] = &dynamodb.AttributeValue{
+					BOOL: aws.Bool(val),
+				}
+				updateExpressions = append(updateExpressions, fmt.Sprintf("%s=:%s", k, k))
+			} else {
+				// remove properties set to `false`
+				removeAttributes = append(removeAttributes, k)
 			}
 		case []string:
 			updateAttributes[placeholder] = &dynamodb.AttributeValue{
 				SS: aws.StringSlice(v.([]string)),
 			}
+			updateExpressions = append(updateExpressions, fmt.Sprintf("%s=:%s", k, k))
 		case map[string]string:
 			val, err := dynamodbattribute.MarshalMap(v.(map[string]string))
 			if err != nil {
@@ -157,12 +170,28 @@ func (dt *DynamoDBTable) Update(key uuid.UUID, castTo interface{}, changeSet Cha
 			updateAttributes[placeholder] = &dynamodb.AttributeValue{
 				M: val,
 			}
+			updateExpressions = append(updateExpressions, fmt.Sprintf("%s=:%s", k, k))
 		case time.Time:
 			updateAttributes[placeholder] = &dynamodb.AttributeValue{
 				S: aws.String(v.(time.Time).Format("2006-01-02T15:04:05Z07:00")),
 			}
+			updateExpressions = append(updateExpressions, fmt.Sprintf("%s=:%s", k, k))
+		case *bool:
+			if v.(*bool) == nil {
+				removeAttributes = append(removeAttributes, k)
+			} else {
+				val := *v.(*bool)
+				updateAttributes[placeholder] = &dynamodb.AttributeValue{
+					BOOL: aws.Bool(val),
+				}
+				updateExpressions = append(updateExpressions, fmt.Sprintf("%s=:%s", k, k))
+			}
 		}
-		updateExpressions = append(updateExpressions, fmt.Sprintf("%s=:%s", k, k))
+	}
+
+	udpateExpression := fmt.Sprintf("SET %s", strings.Join(updateExpressions, ", "))
+	if len(removeAttributes) > 0 {
+		udpateExpression = udpateExpression + fmt.Sprintf(" REMOVE %s", strings.Join(removeAttributes, ", "))
 	}
 
 	// perform update
@@ -174,7 +203,7 @@ func (dt *DynamoDBTable) Update(key uuid.UUID, castTo interface{}, changeSet Cha
 			},
 		},
 		ExpressionAttributeValues: updateAttributes,
-		UpdateExpression:          aws.String(fmt.Sprintf("set %s", strings.Join(updateExpressions, ", "))),
+		UpdateExpression:          aws.String(udpateExpression),
 		ReturnValues:              aws.String("ALL_NEW"),
 	})
 	if err != nil {

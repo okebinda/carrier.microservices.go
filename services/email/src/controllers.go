@@ -87,7 +87,7 @@ func PostEmails(w http.ResponseWriter, r *http.Request) {
 		Template:      payload.Template,
 		Substitutions: payload.Substitutions,
 		SendStatus:    payload.SendStatus,
-		Incomplete:    payload.Incomplete,
+		Incomplete:    true,
 	}
 
 	// save email
@@ -116,6 +116,8 @@ func GetEmail(w http.ResponseWriter, r *http.Request) {
 	// get email from context
 	email := r.Context().Value(keyEmail).(*Email)
 
+	logger.Debugf("Email: %v", email)
+
 	// map result to response payload
 	emailPayload := EmailSchema{}
 	emailPayload.load(email)
@@ -136,6 +138,8 @@ func UpdateEmail(w http.ResponseWriter, r *http.Request) {
 	// get email from context
 	ctx := r.Context()
 	email := ctx.Value(keyEmail).(*Email)
+
+	logger.Debugf("Email (before): %v", email)
 
 	// get payload from request body
 	defer r.Body.Close()
@@ -164,9 +168,6 @@ func UpdateEmail(w http.ResponseWriter, r *http.Request) {
 		"incomplete":    payload.Incomplete,
 	}
 
-	logger.Debugf("Email: %v", email)
-	logger.Debugf("Data: %v", changeSet)
-
 	// save email
 	err = emailRepository.Update(email, changeSet)
 	if err != nil {
@@ -174,6 +175,12 @@ func UpdateEmail(w http.ResponseWriter, r *http.Request) {
 		serverErrorResponse(w)
 		return
 	}
+
+	if !payload.Incomplete {
+		email.Incomplete = false
+	}
+
+	logger.Debugf("Email (after): %v", email)
 
 	// map result to response payload
 	emailPayload := EmailSchema{}
@@ -194,6 +201,8 @@ func DeleteEmail(w http.ResponseWriter, r *http.Request) {
 	// get email from context
 	ctx := r.Context()
 	email := ctx.Value(keyEmail).(*Email)
+
+	logger.Debugf("Email: %v", email)
 
 	// get email repository from context
 	emailRepository := ctx.Value(keyEmailRepository).(func() *EmailRepository)()

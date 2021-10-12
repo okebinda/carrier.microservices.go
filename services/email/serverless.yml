@@ -80,3 +80,5 @@ resources:
         #   KeySchema:
         #     - AttributeName: id
         #       KeyType: HASH
+
+# https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/bp-indexes-general-sparse-indexes.html
