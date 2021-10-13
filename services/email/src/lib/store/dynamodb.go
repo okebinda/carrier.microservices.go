@@ -112,6 +112,9 @@ func (dt *DynamoDBTable) Get(key uuid.UUID, castTo interface{}) error {
 	if err := dynamodbattribute.UnmarshalMap(result.Item, &castTo); err != nil {
 		return err
 	}
+
+	fmt.Println(fmt.Sprintf("Item: %v", result.Item))
+
 	return nil
 }
 
@@ -146,17 +149,16 @@ func (dt *DynamoDBTable) Update(key uuid.UUID, castTo interface{}, changeSet Cha
 				N: aws.String(strconv.Itoa(v.(int))),
 			}
 			updateExpressions = append(updateExpressions, fmt.Sprintf("%s=:%s", k, k))
-		case bool:
-			val := v.(bool)
-			if val {
-				updateAttributes[placeholder] = &dynamodb.AttributeValue{
-					BOOL: aws.Bool(val),
-				}
-				updateExpressions = append(updateExpressions, fmt.Sprintf("%s=:%s", k, k))
-			} else {
-				// remove properties set to `false`
-				removeAttributes = append(removeAttributes, k)
+		case int64:
+			updateAttributes[placeholder] = &dynamodb.AttributeValue{
+				N: aws.String(strconv.FormatInt(v.(int64), 10)),
 			}
+			updateExpressions = append(updateExpressions, fmt.Sprintf("%s=:%s", k, k))
+		case bool:
+			updateAttributes[placeholder] = &dynamodb.AttributeValue{
+				BOOL: aws.Bool(v.(bool)),
+			}
+			updateExpressions = append(updateExpressions, fmt.Sprintf("%s=:%s", k, k))
 		case []string:
 			updateAttributes[placeholder] = &dynamodb.AttributeValue{
 				SS: aws.StringSlice(v.([]string)),
@@ -172,17 +174,15 @@ func (dt *DynamoDBTable) Update(key uuid.UUID, castTo interface{}, changeSet Cha
 			}
 			updateExpressions = append(updateExpressions, fmt.Sprintf("%s=:%s", k, k))
 		case time.Time:
-			updateAttributes[placeholder] = &dynamodb.AttributeValue{
-				S: aws.String(v.(time.Time).Format("2006-01-02T15:04:05Z07:00")),
-			}
-			updateExpressions = append(updateExpressions, fmt.Sprintf("%s=:%s", k, k))
-		case *bool:
-			if v.(*bool) == nil {
+			val := v.(time.Time)
+			if val.IsZero() {
+				// remove nil times
+				// why? sparse indexing: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/bp-indexes-general-sparse-indexes.html
+				// also nil times don't make sense
 				removeAttributes = append(removeAttributes, k)
 			} else {
-				val := *v.(*bool)
 				updateAttributes[placeholder] = &dynamodb.AttributeValue{
-					BOOL: aws.Bool(val),
+					S: aws.String(val.Format("2006-01-02T15:04:05Z07:00")),
 				}
 				updateExpressions = append(updateExpressions, fmt.Sprintf("%s=:%s", k, k))
 			}

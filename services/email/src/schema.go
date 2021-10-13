@@ -11,7 +11,7 @@ type EmailRequestSchema struct {
 	Template      string            `json:"template" validate:"required,min=2,max=255"`
 	Substitutions map[string]string `json:"substitutions"`
 	SendStatus    int               `json:"send_status" validate:"required,numeric,gte=1,lte=3"`
-	Incomplete    bool              `json:"incomplete"`
+	Queued        datetime.JSONTime `json:"queued"`
 }
 
 // EmailSchema defines the JSON schema for the Email model.
@@ -21,7 +21,7 @@ type EmailSchema struct {
 	Template      string            `json:"template"`
 	Substitutions map[string]string `json:"substitutions"`
 	SendStatus    int               `json:"send_status"`
-	Incomplete    bool              `json:"incomplete"`
+	Queued        datetime.JSONTime `json:"queued"`
 	Attempts      int               `json:"attempts"`
 	Accepted      int               `json:"accepted"`
 	Rejected      int               `json:"rejected"`
@@ -37,7 +37,7 @@ func (s *EmailSchema) load(m *Email) {
 	s.Template = m.Template
 	s.Substitutions = m.Substitutions
 	s.SendStatus = m.SendStatus
-	s.Incomplete = m.Incomplete
+	s.Queued = datetime.JSONTime(m.Queued)
 	s.Attempts = m.Attempts
 	s.Accepted = m.Accepted
 	s.Rejected = m.Rejected

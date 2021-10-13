@@ -124,17 +124,17 @@ $ sls invoke local --function email --data '{"httpMethod":"POST", "path":"emails
 
 ```ssh
 $ cd /workspace/services/email
-$ sls invoke local --function email --data '{"httpMethod":"GET", "path":"email/8ad5f922-45fc-4f52-ac9f-511e9a7b0fc5", "queryStringParameters": {}}'
+$ sls invoke local --function email --data '{"httpMethod":"GET", "path":"email/e4da183e-b705-4803-b003-b59862f8507c", "queryStringParameters": {}}'
 ```
 
 ```ssh
 $ cd /workspace/services/email
-$ sls invoke local --function email --data '{"httpMethod":"PUT", "path":"email/8ad5f922-45fc-4f52-ac9f-511e9a7b0fc5", "body":"{\"recipients\":[\"testa@test.com\"],\"template\":\"template-1a\",\"substitutions\":{\"key1\":\"value 1a\",\"key2\":\"value 2a\"},\"send_status\":2,\"incomplete\":false}", "queryStringParameters": {}}'
+$ sls invoke local --function email --data '{"httpMethod":"PUT", "path":"email/e4da183e-b705-4803-b003-b59862f8507c", "body":"{\"recipients\":[\"testa@test.com\"],\"template\":\"template-1a\",\"substitutions\":{\"key1\":\"value 1a\",\"key2\":\"value 2a\"},\"send_status\":2,\"queued\":\"0001-01-01T00:00:00+0000\"}", "queryStringParameters": {}}'
 ```
 
 ```ssh
 $ cd /workspace/services/email
-$ sls invoke local --function email --data '{"httpMethod":"DELETE", "path":"email/8ad5f922-45fc-4f52-ac9f-511e9a7b0fc5", "queryStringParameters": {}}'
+$ sls invoke local --function email --data '{"httpMethod":"DELETE", "path":"email/e4da183e-b705-4803-b003-b59862f8507c", "queryStringParameters": {}}'
 ```
 
 ### Use

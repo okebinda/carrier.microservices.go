@@ -69,16 +69,25 @@ resources:
         AttributeDefinitions:
           - AttributeName: id
             AttributeType: B
+          - AttributeName: queued
+            AttributeType: S
         KeySchema:
           - AttributeName: id
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
-        # GlobalSecondaryIndexes:
-        #   IndexName: ${self:custom.prefix}-${opt:stage,'dev'}-dt-emails-idx-incomplete
-        #   KeySchema:
-        #     - AttributeName: id
-        #       KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: ${self:custom.prefix}-${opt:stage,'dev'}-dt-emails-idx-incomplete
+            KeySchema:
+              - AttributeName: id
+                KeyType: HASH
+              - AttributeName: queued
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
 
 # https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/bp-indexes-general-sparse-indexes.html

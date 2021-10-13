@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"carrier.microservices.go/src/lib/store"
 	"carrier.microservices.go/src/lib/validation"
@@ -87,7 +88,7 @@ func PostEmails(w http.ResponseWriter, r *http.Request) {
 		Template:      payload.Template,
 		Substitutions: payload.Substitutions,
 		SendStatus:    payload.SendStatus,
-		Incomplete:    true,
+		Queued:        time.Now(),
 	}
 
 	// save email
@@ -165,7 +166,7 @@ func UpdateEmail(w http.ResponseWriter, r *http.Request) {
 		"template":      payload.Template,
 		"substitutions": payload.Substitutions,
 		"send_status":   payload.SendStatus,
-		"incomplete":    payload.Incomplete,
+		"queued":        time.Time(payload.Queued),
 	}
 
 	// save email
@@ -176,8 +177,9 @@ func UpdateEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !payload.Incomplete {
-		email.Incomplete = false
+	// fix empty `queued` in result payload
+	if time.Time(payload.Queued).IsZero() {
+		email.Queued = time.Time{}
 	}
 
 	logger.Debugf("Email (after): %v", email)
