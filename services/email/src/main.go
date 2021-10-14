@@ -31,27 +31,28 @@ func init() {
 	var err error
 
 	// connect to datastore
-	db, err = store.CreateConnection(os.Getenv("DYNAMODB_ENDPOINT"))
+	db, err = store.CreateConnection(os.Getenv("AWS_REGION"), os.Getenv("DYNAMODB_ENDPOINT"))
 	if err != nil {
 		log.Fatalf("Database connection error: %s", err)
 	}
 
-	// setup routes
+	// create router
 	r := chi.NewRouter()
 
-	r.Route("/", func(r chi.Router) {
-		r.Use(LogRequest)
-		r.Use(Authorize)
-		r.Use(EmailRepositoryCtx)
-		r.Route("/email/{emailID}", func(r chi.Router) {
-			r.Use(EmailCtx)
-			r.Get("/", GetEmail)
-			r.Put("/", UpdateEmail)
-			r.Delete("/", DeleteEmail)
-		})
-		r.Get("/emails", GetEmails)
-		r.Post("/emails", PostEmails)
+	// add middleware
+	r.Use(LogRequest)
+	r.Use(Authorize)
+	r.Use(EmailRepositoryCtx)
+
+	// add routes
+	r.Route("/email/{emailID}", func(r chi.Router) {
+		r.Use(EmailCtx)
+		r.Get("/", GetEmail)
+		r.Put("/", UpdateEmail)
+		r.Delete("/", DeleteEmail)
 	})
+	r.Get("/emails", GetEmails)
+	r.Post("/emails", PostEmails)
 
 	adapter = chiproxy.New(r)
 }

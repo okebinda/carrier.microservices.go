@@ -6,4 +6,5 @@
 .dynamodb/
 services/email/bin/*
 .env*
+!.env.template
 *code-workspace

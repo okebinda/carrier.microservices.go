@@ -40,6 +40,20 @@ provider:
   # @todo: remove once upgraded to v3
   apiGateway:
     shouldStartNameWithService: true
+  
+  # IAM
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:DescribeTable
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource:
+        - "Fn::GetAtt": [ emailsTable, Arn ]
 
 package:
   patterns:
@@ -50,21 +64,33 @@ functions:
   email:
     handler: bin/email
     events:
-      - httpApi:
+      - http:
           path: /emails
           method: get
-      - httpApi:
+      - http:
           path: /emails
           method: post
-      - httpApi:
+      - http:
           path: /email/{id}
           method: get
-      - httpApi:
+          request:
+            parameters:
+              paths:
+                id: true
+      - http:
           path: /email/{id}
           method: put
-      - httpApi:
+          request:
+            parameters:
+              paths:
+                id: true
+      - http:
           path: /email/{id}
           method: delete
+          request:
+            parameters:
+              paths:
+                id: true
     environment:
       LOG_LEVEL: ${self:custom.logLevel}
       LOG_ENCODING: ${self:custom.logEncoding}

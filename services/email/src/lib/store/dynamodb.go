@@ -14,10 +14,14 @@ import (
 )
 
 // CreateConnection to dynamodb
-func CreateConnection(endpoint string) (*dynamodb.DynamoDB, error) {
-	sess, err := session.NewSession(&aws.Config{
-		Endpoint: aws.String(endpoint)},
-	)
+func CreateConnection(region, endpoint string) (*dynamodb.DynamoDB, error) {
+	var config *aws.Config
+	if endpoint == "" {
+		config = &aws.Config{Region: aws.String("us-east-1")}
+	} else {
+		config = &aws.Config{Endpoint: aws.String(endpoint)}
+	}
+	sess, err := session.NewSession(config)
 	if err != nil {
 		return nil, err
 	}
