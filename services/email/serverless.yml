@@ -53,6 +53,18 @@ functions:
       - httpApi:
           path: /emails
           method: get
+      - httpApi:
+          path: /emails
+          method: post
+      - httpApi:
+          path: /email/{id}
+          method: get
+      - httpApi:
+          path: /email/{id}
+          method: put
+      - httpApi:
+          path: /email/{id}
+          method: delete
     environment:
       LOG_LEVEL: ${self:custom.logLevel}
       LOG_ENCODING: ${self:custom.logEncoding}

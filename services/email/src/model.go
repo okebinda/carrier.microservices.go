@@ -12,11 +12,14 @@ const (
 	// EmailStatusQueued is a status constant for new/queued emails
 	EmailStatusQueued = 1
 
+	// EmailStatusProcessing is a status constant for emails that are attempting to send
+	EmailStatusProcessing = 2
+
 	// EmailStatusComplete is a status constant for emails that have been successfully sent
-	EmailStatusComplete = 2
+	EmailStatusComplete = 3
 
 	// EmailStatusFailed is a status constant for emails that have failed to be sent and should not be tried again
-	EmailStatusFailed = 3
+	EmailStatusFailed = 4
 )
 
 // Email is an email entity

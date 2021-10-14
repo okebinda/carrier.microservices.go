@@ -10,7 +10,7 @@ type EmailRequestSchema struct {
 	Recipients    []string          `json:"recipients" validate:"required,min=1,dive,required,email"`
 	Template      string            `json:"template" validate:"required,min=2,max=255"`
 	Substitutions map[string]string `json:"substitutions"`
-	SendStatus    int               `json:"send_status" validate:"required,numeric,gte=1,lte=3"`
+	SendStatus    int               `json:"send_status" validate:"required,numeric,gte=1,lte=4"`
 	Queued        datetime.JSONTime `json:"queued"`
 }
 

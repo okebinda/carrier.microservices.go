@@ -56,8 +56,8 @@ func init() {
 	adapter = chiproxy.New(r)
 }
 
-// Handler is our lambda handler invoked by the `lambda.Start` function call
-func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+// APIGatewayHandler is the lambda handler invoked by API Gateway events
+func APIGatewayHandler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 
 	// initialize logger
 	lc, _ := lambdacontext.FromContext(ctx)
@@ -67,6 +67,15 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	// serve request
 	c, err := adapter.ProxyWithContext(ctx, request)
 	return c, err
+}
+
+// SQSHandler is the lambda handler invoked by SQS events
+func SQSHandler(ctx context.Context, sqsEvent events.SQSEvent) error {
+	for _, message := range sqsEvent.Records {
+		fmt.Printf("The message %s for event source %s = %s \n", message.MessageId, message.EventSource, message.Body)
+	}
+
+	return nil
 }
 
 // sugaredLogger initializes the zap sugar logger
@@ -147,5 +156,6 @@ func generateResponse(w http.ResponseWriter, statusCode int, body []byte) {
 }
 
 func main() {
-	lambda.Start(Handler)
+	lambda.Start(APIGatewayHandler)
+	lambda.Start(SQSHandler)
 }
