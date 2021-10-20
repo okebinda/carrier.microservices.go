@@ -24,6 +24,9 @@ custom:
   logEncoding: ${env:LOG_ENCODING, "json"}
   apiKey: ${env:API_KEY, ""}
   dynamoDBEndpoint: ${env:DYNAMODB_ENDPOINT, ""}
+  sparkPostAPIKey: ${env:SPARKPOST_API_KEY, ""}
+  sparkPostBaseURL: ${env:SPARKPOST_BASE_URL, "https://api.sparkpost.com"}
+  sparkPostAPIVersion: ${env:SPARKPOST_API_VERSION, "1"}
   dynamodb:
     stages:
       - dev
@@ -97,6 +100,9 @@ functions:
       API_KEY: ${self:custom.apiKey}
       DYNAMODB_ENDPOINT: ${self:custom.dynamoDBEndpoint}
       EMAILS_TABLE: ${self:custom.prefix}-${opt:stage,'dev'}-dt-emails
+      SPARKPOST_API_KEY: ${self:custom.sparkPostAPIKey}
+      SPARKPOST_BASE_URL: ${self:custom.sparkPostBaseURL}
+      SPARKPOST_API_VERSION: ${self:custom.sparkPostAPIVersion}
 
 resources:
   Resources:

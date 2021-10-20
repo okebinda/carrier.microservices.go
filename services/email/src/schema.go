@@ -12,6 +12,7 @@ type EmailRequestSchema struct {
 	Substitutions map[string]string `json:"substitutions"`
 	SendStatus    int               `json:"send_status" validate:"required,numeric,gte=1,lte=4"`
 	Queued        datetime.JSONTime `json:"queued"`
+	SendNow       *bool             `json:"send_now" validate:"required"`
 }
 
 // EmailSchema defines the JSON schema for the Email model.
