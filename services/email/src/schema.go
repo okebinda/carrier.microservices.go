@@ -10,9 +10,14 @@ type EmailRequestSchema struct {
 	Recipients    []string          `json:"recipients" validate:"required,min=1,dive,required,email"`
 	Template      string            `json:"template" validate:"required,min=2,max=255"`
 	Substitutions map[string]string `json:"substitutions"`
-	SendStatus    int               `json:"send_status" validate:"required,numeric,gte=1,lte=4"`
+	SendStatus    int               `json:"send_status" validate:"numeric,gte=1,lte=4"`
 	Queued        datetime.JSONTime `json:"queued"`
 	SendNow       *bool             `json:"send_now" validate:"required"`
+}
+
+//BatchEmailRequestSchema defines the input shape and validation schema for
+type BatchEmailRequestSchema struct {
+	Emails []EmailRequestSchema `json:"emails" validate:"required,min=1"`
 }
 
 // EmailSchema defines the JSON schema for the Email model.
@@ -57,4 +62,11 @@ type EmailListResponseSchema struct {
 	Emails []EmailSchema `json:"emails"`
 	Page   int64         `json:"page"`
 	Limit  int64         `json:"limit"`
+}
+
+// BatchEmailResponseSchema defines the response schema for a batch of Email records.
+type BatchEmailResponseSchema struct {
+	Emails []EmailSchema `json:"emails"`
+	Sent   int64         `json:"sent"`
+	Queued int64         `json:"queued"`
 }

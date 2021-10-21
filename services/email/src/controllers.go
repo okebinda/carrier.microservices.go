@@ -62,7 +62,10 @@ func GetEmails(w http.ResponseWriter, r *http.Request) {
 
 // PostEmails creates a new email record
 func PostEmails(w http.ResponseWriter, r *http.Request) {
-	var payload EmailRequestSchema
+	var payload BatchEmailRequestSchema
+	var emails []EmailSchema
+	var client sp.Client
+	var sent, queued int64
 	var err error
 
 	logger.Debugw("PostEmails called")
@@ -87,105 +90,122 @@ func PostEmails(w http.ResponseWriter, r *http.Request) {
 	// get email repository from context
 	emailRepository := r.Context().Value(keyEmailRepository).(func() *EmailRepository)()
 
-	// create a new email record
-	email := Email{
-		Recipients:    payload.Recipients,
-		Template:      payload.Template,
-		Substitutions: payload.Substitutions,
-		SendStatus:    payload.SendStatus,
-		Queued:        time.Now(),
-	}
+	// loop over emails defined in payload
+	for _, emailPayload := range payload.Emails {
 
-	// set status differently if sending email now or later
-	if *payload.SendNow == true {
-		email.SendStatus = EmailStatusProcessing
-	} else {
-		email.SendStatus = EmailStatusQueued
-	}
-
-	// save email
-	err = emailRepository.Store(&email)
-	if err != nil {
-		logger.Errorf("Unable to save email: %v", err)
-		serverErrorResponse(w)
-		return
-	}
-
-	// send email now
-	if *payload.SendNow == true {
-
-		logger.Debugw("Attempt to send email synchronously")
-
-		// create change set for email
-		changeSet := store.ChangeSet{
-			"attempts":        email.Attempts + 1,
-			"last_attempt_at": time.Now(),
+		// create email
+		email := Email{
+			Recipients:    emailPayload.Recipients,
+			Template:      emailPayload.Template,
+			Substitutions: emailPayload.Substitutions,
+			Queued:        time.Now(),
 		}
 
-		// get SparkPost configuration from ENV
-		apiKey := os.Getenv("SPARKPOST_API_KEY")
-		apiBaseURL := os.Getenv("SPARKPOST_BASE_URL")
-		apiVersion, _ := strconv.Atoi(os.Getenv("SPARKPOST_API_VERSION"))
-
-		// create SparkPost client
-		cfg := &sp.Config{
-			BaseUrl:    apiBaseURL,
-			ApiKey:     apiKey,
-			ApiVersion: apiVersion,
-		}
-		var client sp.Client
-		err := client.Init(cfg)
-		if err != nil {
-			logger.Errorf("SparkPost client init failed: %s\n", err)
-		}
-
-		// create recipient list
-		recipients := []sp.Recipient{}
-		for _, address := range email.Recipients {
-			recipient := sp.Recipient{
-				Address:          address,
-				SubstitutionData: email.Substitutions,
-			}
-			recipients = append(recipients, recipient)
-		}
-
-		// send email
-		tx := &sp.Transmission{
-			Recipients: recipients,
-			Content: map[string]interface{}{
-				"template_id": email.Template,
-			},
-		}
-		id, res, err := client.Send(tx)
-		if err != nil {
-			logger.Errorf("SparkPost email transmission failed: %s\n", err)
-			changeSet["SendStatus"] = EmailStatusQueued
+		// set status differently if sending email now or later
+		if *emailPayload.SendNow == true {
+			email.SendStatus = EmailStatusProcessing
 		} else {
-			logger.Debugf("SparkPost transmission successful. ID: %v, Results: %v", id, res.Results)
-			txResults := res.Results.(map[string]interface{})
-			changeSet["send_status"] = EmailStatusComplete
-			changeSet["accepted"] = int(txResults["total_accepted_recipients"].(float64))
-			changeSet["rejected"] = int(txResults["total_rejected_recipients"].(float64))
-			changeSet["queued"] = time.Time{}
-			email.Queued = time.Time{}
+			email.SendStatus = EmailStatusQueued
 		}
 
-		// save again with transmission data
-		err = emailRepository.Update(&email, changeSet)
+		// save email
+		err = emailRepository.Store(&email)
 		if err != nil {
-			logger.Errorf("Unable to update email: %v", err)
+			logger.Errorf("Unable to save email: %v", err)
 			serverErrorResponse(w)
 			return
 		}
+
+		// send email now
+		if *emailPayload.SendNow == true {
+
+			logger.Debugw("Attempt to send email synchronously")
+
+			// create change set for email
+			changeSet := store.ChangeSet{
+				"attempts":        email.Attempts + 1,
+				"last_attempt_at": time.Now(),
+			}
+
+			// create SparkPost client if needed
+			if client.Client == nil {
+
+				logger.Debugw("Initilize SparkPost client")
+
+				// get SparkPost configuration from ENV
+				apiKey := os.Getenv("SPARKPOST_API_KEY")
+				apiBaseURL := os.Getenv("SPARKPOST_BASE_URL")
+				apiVersion, _ := strconv.Atoi(os.Getenv("SPARKPOST_API_VERSION"))
+
+				// create SparkPost client
+				cfg := &sp.Config{
+					BaseUrl:    apiBaseURL,
+					ApiKey:     apiKey,
+					ApiVersion: apiVersion,
+				}
+				err := client.Init(cfg)
+				if err != nil {
+					logger.Errorf("SparkPost client init failed: %s\n", err)
+				}
+			}
+
+			// create recipient list
+			recipients := []sp.Recipient{}
+			for _, address := range email.Recipients {
+				recipient := sp.Recipient{
+					Address:          address,
+					SubstitutionData: email.Substitutions,
+				}
+				recipients = append(recipients, recipient)
+			}
+
+			// send email
+			tx := &sp.Transmission{
+				Recipients: recipients,
+				Content: map[string]interface{}{
+					"template_id": email.Template,
+				},
+			}
+			id, res, err := client.Send(tx)
+			if err != nil {
+				logger.Errorf("SparkPost email transmission failed: %s\n", err)
+				changeSet["SendStatus"] = EmailStatusQueued
+				queued++
+			} else {
+				logger.Debugf("SparkPost transmission successful. ID: %v, Results: %v", id, res.Results)
+				txResults := res.Results.(map[string]interface{})
+				changeSet["send_status"] = EmailStatusComplete
+				changeSet["accepted"] = int(txResults["total_accepted_recipients"].(float64))
+				changeSet["rejected"] = int(txResults["total_rejected_recipients"].(float64))
+				changeSet["queued"] = time.Time{}
+				email.Queued = time.Time{}
+				sent++
+			}
+
+			// save again with transmission data
+			err = emailRepository.Update(&email, changeSet)
+			if err != nil {
+				logger.Errorf("Unable to update email: %v", err)
+				serverErrorResponse(w)
+				return
+			}
+		} else {
+			queued++
+		}
+
+		// map result to response payload
+		emailPayload := EmailSchema{}
+		emailPayload.load(&email)
+
+		// add email to list for output
+		emails = append(emails, emailPayload)
 	}
 
-	// map result to response payload
-	emailPayload := EmailSchema{}
-	emailPayload.load(&email)
-
 	// response
-	successResponse(w, 201, EmailResponseSchema{
-		Email: emailPayload,
+	successResponse(w, 201, BatchEmailResponseSchema{
+		Emails: emails,
+		Sent:   sent,
+		Queued: queued,
 	})
 }
 
@@ -197,7 +217,7 @@ func GetEmail(w http.ResponseWriter, r *http.Request) {
 	// get email from context
 	email := r.Context().Value(keyEmail).(*Email)
 
-	logger.Debugf("Email: %v", email)
+	logger.Debugf("Email: %+v", email)
 
 	// map result to response payload
 	emailPayload := EmailSchema{}
@@ -220,7 +240,7 @@ func UpdateEmail(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	email := ctx.Value(keyEmail).(*Email)
 
-	logger.Debugf("Email (before): %v", email)
+	logger.Debugf("Email (before): %+v", email)
 
 	// get payload from request body
 	defer r.Body.Close()
@@ -252,7 +272,7 @@ func UpdateEmail(w http.ResponseWriter, r *http.Request) {
 	// save email
 	err = emailRepository.Update(email, changeSet)
 	if err != nil {
-		logger.Errorf("Unable to update email: %v", err)
+		logger.Errorf("Unable to update email: %+v", err)
 		serverErrorResponse(w)
 		return
 	}
@@ -284,7 +304,7 @@ func DeleteEmail(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	email := ctx.Value(keyEmail).(*Email)
 
-	logger.Debugf("Email: %v", email)
+	logger.Debugf("Email: %+v", email)
 
 	// get email repository from context
 	emailRepository := ctx.Value(keyEmailRepository).(func() *EmailRepository)()

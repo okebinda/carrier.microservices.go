@@ -117,7 +117,7 @@ func (dt *DynamoDBTable) Get(key uuid.UUID, castTo interface{}) error {
 		return err
 	}
 
-	fmt.Println(fmt.Sprintf("Item: %v", result.Item))
+	// fmt.Println(fmt.Sprintf("Item: %v", result.Item))
 
 	return nil
 }
