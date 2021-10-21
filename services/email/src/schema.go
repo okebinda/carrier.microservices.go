@@ -13,6 +13,7 @@ type EmailRequestSchema struct {
 	SendStatus    int               `json:"send_status" validate:"numeric,gte=1,lte=4"`
 	Queued        datetime.JSONTime `json:"queued"`
 	SendNow       *bool             `json:"send_now" validate:"required"`
+	ServiceID     string            `json:"service_id"`
 }
 
 //BatchEmailRequestSchema defines the input shape and validation schema for
@@ -23,6 +24,7 @@ type BatchEmailRequestSchema struct {
 // EmailSchema defines the JSON schema for the Email model.
 type EmailSchema struct {
 	ID            uuid.UUID         `json:"id"`
+	ServiceID     string            `json:"service_id"`
 	Recipients    []string          `json:"recipients"`
 	Template      string            `json:"template"`
 	Substitutions map[string]string `json:"substitutions"`
@@ -39,6 +41,7 @@ type EmailSchema struct {
 // Loads an Email record into EmailSchema.
 func (s *EmailSchema) load(m *Email) {
 	s.ID = m.ID
+	s.ServiceID = m.ServiceID
 	s.Recipients = m.Recipients
 	s.Template = m.Template
 	s.Substitutions = m.Substitutions

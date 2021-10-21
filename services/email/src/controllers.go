@@ -3,13 +3,11 @@ package main
 import (
 	"encoding/json"
 	"net/http"
-	"os"
-	"strconv"
 	"time"
 
+	emailService "carrier.microservices.go/src/lib/email"
 	"carrier.microservices.go/src/lib/store"
 	"carrier.microservices.go/src/lib/validation"
-	sp "github.com/SparkPost/gosparkpost"
 )
 
 // GetEmails retrieves a list of emails
@@ -64,7 +62,7 @@ func GetEmails(w http.ResponseWriter, r *http.Request) {
 func PostEmails(w http.ResponseWriter, r *http.Request) {
 	var payload BatchEmailRequestSchema
 	var emails []EmailSchema
-	var client sp.Client
+	var exchange *emailService.SparkPostExchange
 	var sent, queued int64
 	var err error
 
@@ -123,62 +121,40 @@ func PostEmails(w http.ResponseWriter, r *http.Request) {
 
 			// create change set for email
 			changeSet := store.ChangeSet{
-				"attempts":        email.Attempts + 1,
-				"last_attempt_at": time.Now(),
+				"attempts": email.Attempts + 1,
 			}
 
-			// create SparkPost client if needed
-			if client.Client == nil {
-
-				logger.Debugw("Initilize SparkPost client")
-
-				// get SparkPost configuration from ENV
-				apiKey := os.Getenv("SPARKPOST_API_KEY")
-				apiBaseURL := os.Getenv("SPARKPOST_BASE_URL")
-				apiVersion, _ := strconv.Atoi(os.Getenv("SPARKPOST_API_VERSION"))
-
-				// create SparkPost client
-				cfg := &sp.Config{
-					BaseUrl:    apiBaseURL,
-					ApiKey:     apiKey,
-					ApiVersion: apiVersion,
-				}
-				err := client.Init(cfg)
+			// get exchange if not initialized
+			if exchange == nil {
+				exchange = &emailService.SparkPostExchange{}
+				err = emailService.Init(exchange)
 				if err != nil {
-					logger.Errorf("SparkPost client init failed: %s\n", err)
+					logger.Errorf("Cannot create email exchange: %s\n", err)
 				}
 			}
 
-			// create recipient list
-			recipients := []sp.Recipient{}
-			for _, address := range email.Recipients {
-				recipient := sp.Recipient{
-					Address:          address,
-					SubstitutionData: email.Substitutions,
-				}
-				recipients = append(recipients, recipient)
+			// create email record to communicate with service
+			exEmail := emailService.Email{
+				Recipients:    email.Recipients,
+				Template:      email.Template,
+				Substitutions: email.Substitutions,
 			}
 
-			// send email
-			tx := &sp.Transmission{
-				Recipients: recipients,
-				Content: map[string]interface{}{
-					"template_id": email.Template,
-				},
-			}
-			id, res, err := client.Send(tx)
+			// send email and update record
+			err = exchange.Send(&exEmail)
 			if err != nil {
-				logger.Errorf("SparkPost email transmission failed: %s\n", err)
+				logger.Errorf("Email exchange error: %s\n", err)
 				changeSet["SendStatus"] = EmailStatusQueued
 				queued++
 			} else {
-				logger.Debugf("SparkPost transmission successful. ID: %v, Results: %v", id, res.Results)
-				txResults := res.Results.(map[string]interface{})
-				changeSet["send_status"] = EmailStatusComplete
-				changeSet["accepted"] = int(txResults["total_accepted_recipients"].(float64))
-				changeSet["rejected"] = int(txResults["total_rejected_recipients"].(float64))
-				changeSet["queued"] = time.Time{}
+				logger.Debugw("SparkPost transmission successful.")
 				email.Queued = time.Time{}
+				changeSet["send_status"] = EmailStatusComplete
+				changeSet["service_id"] = exEmail.ID
+				changeSet["last_attempt_at"] = exEmail.LastAttemptAt
+				changeSet["accepted"] = exEmail.Accepted
+				changeSet["rejected"] = exEmail.Rejected
+				changeSet["queued"] = email.Queued
 				sent++
 			}
 
@@ -262,6 +238,7 @@ func UpdateEmail(w http.ResponseWriter, r *http.Request) {
 
 	// create change set for email
 	changeSet := store.ChangeSet{
+		"service_id":    payload.ServiceID,
 		"recipients":    payload.Recipients,
 		"template":      payload.Template,
 		"substitutions": payload.Substitutions,

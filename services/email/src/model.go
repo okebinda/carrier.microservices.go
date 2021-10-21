@@ -25,6 +25,7 @@ const (
 // Email is an email entity
 type Email struct {
 	ID            uuid.UUID         `json:"id"`
+	ServiceID     string            `json:"service_id"`
 	Recipients    []string          `json:"recipients"`
 	Template      string            `json:"template"`
 	Substitutions map[string]string `json:"substitutions"`
