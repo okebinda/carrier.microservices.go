@@ -15,8 +15,8 @@ type Email struct {
 	LastAttemptAt time.Time
 }
 
-// Exchange is a generic interface for an email service
-type Exchange interface {
-	Init(ex *Exchange) error
-	Send(email Email) error
+// EmailExchange is a generic interface for an email service
+type EmailExchange interface {
+	Init() error
+	Send(email *Email) error
 }

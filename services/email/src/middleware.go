@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 
+	emailService "carrier.microservices.go/src/lib/email"
 	"carrier.microservices.go/src/lib/store"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -15,6 +16,7 @@ type key int
 const (
 	keyEmail key = iota
 	keyEmailRepository
+	keyEmailExchange
 )
 
 // LogRequest logs the request
@@ -98,6 +100,17 @@ func EmailCtx(next http.Handler) http.Handler {
 		}
 
 		ctx := context.WithValue(r.Context(), keyEmail, email)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+// EmailExchangeCtx adds a hepler function to the context to generate an instance of the EmailRepository
+func EmailExchangeCtx(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		getEmailExchange := func() emailService.EmailExchange {
+			return &emailService.SparkPostExchange{}
+		}
+		ctx := context.WithValue(r.Context(), keyEmailExchange, getEmailExchange)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

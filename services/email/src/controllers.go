@@ -62,7 +62,7 @@ func GetEmails(w http.ResponseWriter, r *http.Request) {
 func PostEmails(w http.ResponseWriter, r *http.Request) {
 	var payload BatchEmailRequestSchema
 	var emails []EmailSchema
-	var exchange *emailService.SparkPostExchange
+	var emailExchange emailService.EmailExchange
 	var sent, queued int64
 	var err error
 
@@ -117,20 +117,22 @@ func PostEmails(w http.ResponseWriter, r *http.Request) {
 		// send email now
 		if *emailPayload.SendNow == true {
 
-			logger.Debugw("Attempt to send email synchronously")
+			logger.Debugw("Sending email synchronously")
+
+			// get exchange from context if not initialized
+			if emailExchange == nil {
+				emailExchange = r.Context().Value(keyEmailExchange).(func() emailService.EmailExchange)()
+				err = emailExchange.Init()
+				if err != nil {
+					logger.Errorf("Cannot create email exchange: %s\n", err)
+				} else {
+					logger.Debugw("Initialized email exchange")
+				}
+			}
 
 			// create change set for email
 			changeSet := store.ChangeSet{
 				"attempts": email.Attempts + 1,
-			}
-
-			// get exchange if not initialized
-			if exchange == nil {
-				exchange = &emailService.SparkPostExchange{}
-				err = emailService.Init(exchange)
-				if err != nil {
-					logger.Errorf("Cannot create email exchange: %s\n", err)
-				}
 			}
 
 			// create email record to communicate with service
@@ -141,7 +143,7 @@ func PostEmails(w http.ResponseWriter, r *http.Request) {
 			}
 
 			// send email and update record
-			err = exchange.Send(&exEmail)
+			err = emailExchange.Send(&exEmail)
 			if err != nil {
 				logger.Errorf("Email exchange error: %s\n", err)
 				changeSet["SendStatus"] = EmailStatusQueued

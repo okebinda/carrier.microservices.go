@@ -43,6 +43,7 @@ func init() {
 	r.Use(LogRequest)
 	r.Use(Authorize)
 	r.Use(EmailRepositoryCtx)
+	r.Use(EmailExchangeCtx)
 
 	// add routes
 	r.Route("/email/{emailID}", func(r chi.Router) {

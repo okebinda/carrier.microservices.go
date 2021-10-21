@@ -14,7 +14,7 @@ type SparkPostExchange struct {
 }
 
 // Init initializes the SparkPost service
-func Init(ex *SparkPostExchange) error {
+func (ex *SparkPostExchange) Init() error {
 
 	// get SparkPost configuration from ENV
 	APIKey := os.Getenv("SPARKPOST_API_KEY")
