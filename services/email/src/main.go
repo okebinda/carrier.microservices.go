@@ -20,9 +20,6 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-// @ref: https://ewanvalentine.io/serverless-start-ups-in-golang-part-1/
-// @ref: https://yos.io/2018/02/08/getting-started-with-serverless-go/
-
 var logger *zap.SugaredLogger
 var adapter *chiproxy.ChiLambda
 var db *dynamodb.DynamoDB
@@ -71,19 +68,10 @@ func APIGatewayHandler(ctx context.Context, request events.APIGatewayProxyReques
 	return c, err
 }
 
-// // CloudWatchHandler is the lambda handler invoked by CloudWatch events
-// func CloudWatchHandler(ctx context.Context, cloudWatchEvent events.CloudWatchEvent) {
-// 	logger.Debugf("The CloudWatch event: %+v", cloudWatchEvent)
-// }
-
-// // SQSHandler is the lambda handler invoked by SQS events
-// func SQSHandler(ctx context.Context, sqsEvent events.SQSEvent) error {
-// 	for _, message := range sqsEvent.Records {
-// 		fmt.Printf("The message %s for event source %s = %s \n", message.MessageId, message.EventSource, message.Body)
-// 	}
-
-// 	return nil
-// }
+// CloudWatchHandler is the lambda handler invoked by CloudWatch events
+func CloudWatchHandler(ctx context.Context, cloudWatchEvent events.CloudWatchEvent) {
+	logger.Debugf("The CloudWatch event: %+v", cloudWatchEvent)
+}
 
 // sugaredLogger initializes the zap sugar logger
 func sugaredLogger(requestID string) *zap.SugaredLogger {
@@ -162,7 +150,54 @@ func generateResponse(w http.ResponseWriter, statusCode int, body []byte) {
 	}
 }
 
+// Handler handles AWS Lambda events
+type Handler struct{}
+
+// Invoke handles a generic AWS Lambda invocation event
+func (h Handler) Invoke(ctx context.Context, payload []byte) ([]byte, error) {
+
+	// parse event payload so we can determine what type of event this is
+	var eventData interface{}
+	if err := json.Unmarshal(payload, &eventData); err != nil {
+		logger.Errorf("Unmarshalling error: %s", err)
+		return nil, nil
+	}
+	eventDataMap := eventData.(map[string]interface{})
+
+	// event data shape looks like APIGatewayProxyRequest
+	_, pathExists := eventDataMap["path"]
+	_, httpMethodExists := eventDataMap["httpMethod"]
+	if pathExists && httpMethodExists {
+		event := new(events.APIGatewayProxyRequest)
+		if err := json.Unmarshal(payload, event); err != nil {
+			logger.Errorf("Unmarshalling error: %s", err)
+			return nil, nil
+		}
+		response, err := APIGatewayHandler(ctx, *event)
+		responseBytes, err := json.Marshal(response)
+		if err != nil {
+			logger.Errorf("Marshalling error: %s", err)
+			return nil, nil
+		}
+		return responseBytes, err
+	}
+
+	// event data shape looks like CloudWatchEvent
+	_, IDExists := eventDataMap["id"]
+	_, sourceExists := eventDataMap["source"]
+	if IDExists && sourceExists {
+		event := new(events.CloudWatchEvent)
+		if err := json.Unmarshal(payload, event); err != nil {
+			logger.Errorf("Unmarshalling error: %s", err)
+			return nil, nil
+		}
+		CloudWatchHandler(ctx, *event)
+		return nil, nil
+	}
+
+	return nil, nil
+}
+
 func main() {
-	lambda.Start(APIGatewayHandler)
-	// lambda.Start(CloudWatchHandler)
+	lambda.StartHandler(Handler{})
 }
