@@ -22,7 +22,7 @@ func GetQueryParamInt64(r *http.Request, key string, def int64) (int64, error) {
 	return value, err
 }
 
-// SendEmail ...
+// SendEmail sends an email via the supplied service
 func SendEmail(exchange es.EmailExchange, email *Email, emailRepository *EmailRepository) bool {
 
 	sent := false

@@ -63,6 +63,7 @@ func PostEmails(w http.ResponseWriter, r *http.Request) {
 	var payload BatchEmailRequestSchema
 	var emails []EmailSchema
 	var emailExchange emailService.EmailExchange
+	var exchangeInitialized bool
 	var sent, queued int64
 	var err error
 
@@ -90,6 +91,8 @@ func PostEmails(w http.ResponseWriter, r *http.Request) {
 
 	// loop over emails defined in payload
 	for _, emailPayload := range payload.Emails {
+
+		sendSuccess := false
 
 		// create email
 		email := Email{
@@ -127,16 +130,19 @@ func PostEmails(w http.ResponseWriter, r *http.Request) {
 					logger.Errorf("Cannot create email exchange: %s\n", err)
 				} else {
 					logger.Debugw("Initialized email exchange")
+					exchangeInitialized = true
 				}
 			}
 
 			// send email
-			sendSuccess := SendEmail(emailExchange, &email, emailRepository)
-			if sendSuccess {
-				sent++
-			} else {
-				queued++
+			if exchangeInitialized == true {
+				sendSuccess = SendEmail(emailExchange, &email, emailRepository)
 			}
+		}
+
+		// update tallys
+		if sendSuccess == true {
+			sent++
 		} else {
 			queued++
 		}
@@ -243,48 +249,10 @@ func UpdateEmail(w http.ResponseWriter, r *http.Request) {
 			logger.Errorf("Cannot create email exchange: %s\n", err)
 		} else {
 			logger.Debugw("Initialized email exchange")
+
+			// send email
+			SendEmail(emailExchange, email, emailRepository)
 		}
-
-		// send email
-		SendEmail(emailExchange, email, emailRepository)
-
-		// // create change set for email
-		// changeSetTx := store.ChangeSet{
-		// 	"attempts": email.Attempts + 1,
-		// }
-
-		// // create email record to communicate with service
-		// exEmail := emailService.Email{
-		// 	Recipients:    email.Recipients,
-		// 	Template:      email.Template,
-		// 	Substitutions: email.Substitutions,
-		// }
-
-		// // send email and update record
-		// err = emailExchange.Send(&exEmail)
-		// if err != nil {
-		// 	logger.Errorf("Email exchange error: %s\n", err)
-		// 	changeSetTx["SendStatus"] = EmailStatusQueued
-		// 	// queued++
-		// } else {
-		// 	logger.Debugw("SparkPost transmission successful.")
-		// 	email.Queued = time.Time{}
-		// 	changeSetTx["send_status"] = EmailStatusComplete
-		// 	changeSetTx["service_id"] = exEmail.ID
-		// 	changeSetTx["last_attempt_at"] = exEmail.LastAttemptAt
-		// 	changeSetTx["accepted"] = exEmail.Accepted
-		// 	changeSetTx["rejected"] = exEmail.Rejected
-		// 	changeSetTx["queued"] = email.Queued
-		// 	// sent++
-		// }
-
-		// // save again with transmission data
-		// err = emailRepository.Update(email, changeSetTx)
-		// if err != nil {
-		// 	logger.Errorf("Unable to update email: %v", err)
-		// 	serverErrorResponse(w)
-		// 	return
-		// }
 	}
 
 	logger.Debugf("Email (after): %v", email)
