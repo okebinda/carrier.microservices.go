@@ -94,6 +94,9 @@ functions:
             parameters:
               paths:
                 id: true
+      # - schedule:
+      #     rate: rate(1 minute)
+      #     enabled: true
     environment:
       LOG_LEVEL: ${self:custom.logLevel}
       LOG_ENCODING: ${self:custom.logEncoding}

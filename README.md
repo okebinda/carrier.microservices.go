@@ -154,7 +154,7 @@ Deploy to the development environment:
 
 ```ssh
 $ cd /vagrant/services/email
-$ sls deploy --stage dev
+$ sls deploy --stage development
 ```
 
 Deploy to the production environment:

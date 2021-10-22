@@ -71,14 +71,19 @@ func APIGatewayHandler(ctx context.Context, request events.APIGatewayProxyReques
 	return c, err
 }
 
-// SQSHandler is the lambda handler invoked by SQS events
-func SQSHandler(ctx context.Context, sqsEvent events.SQSEvent) error {
-	for _, message := range sqsEvent.Records {
-		fmt.Printf("The message %s for event source %s = %s \n", message.MessageId, message.EventSource, message.Body)
-	}
+// // CloudWatchHandler is the lambda handler invoked by CloudWatch events
+// func CloudWatchHandler(ctx context.Context, cloudWatchEvent events.CloudWatchEvent) {
+// 	logger.Debugf("The CloudWatch event: %+v", cloudWatchEvent)
+// }
 
-	return nil
-}
+// // SQSHandler is the lambda handler invoked by SQS events
+// func SQSHandler(ctx context.Context, sqsEvent events.SQSEvent) error {
+// 	for _, message := range sqsEvent.Records {
+// 		fmt.Printf("The message %s for event source %s = %s \n", message.MessageId, message.EventSource, message.Body)
+// 	}
+
+// 	return nil
+// }
 
 // sugaredLogger initializes the zap sugar logger
 func sugaredLogger(requestID string) *zap.SugaredLogger {
@@ -159,5 +164,5 @@ func generateResponse(w http.ResponseWriter, statusCode int, body []byte) {
 
 func main() {
 	lambda.Start(APIGatewayHandler)
-	lambda.Start(SQSHandler)
+	// lambda.Start(CloudWatchHandler)
 }
