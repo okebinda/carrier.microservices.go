@@ -70,7 +70,14 @@ func APIGatewayHandler(ctx context.Context, request events.APIGatewayProxyReques
 
 // CloudWatchHandler is the lambda handler invoked by CloudWatch events
 func CloudWatchHandler(ctx context.Context, cloudWatchEvent events.CloudWatchEvent) {
-	logger.Debugf("The CloudWatch event: %+v", cloudWatchEvent)
+
+	// initialize logger
+	lc, _ := lambdacontext.FromContext(ctx)
+	logger = sugaredLogger(lc.AwsRequestID)
+	defer logger.Sync()
+
+	// run job
+	EmailQueue(ctx, cloudWatchEvent)
 }
 
 // sugaredLogger initializes the zap sugar logger

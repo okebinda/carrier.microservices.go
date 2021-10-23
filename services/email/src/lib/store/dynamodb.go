@@ -42,14 +42,26 @@ func NewDynamoDBTable(conn *dynamodb.DynamoDB, table string) *DynamoDBTable {
 }
 
 // List gets a collection of resources
-func (dt *DynamoDBTable) List(castTo interface{}, page, limit int64) error {
+func (dt *DynamoDBTable) List(castTo interface{}, page, limit int64, options ...interface{}) error {
+
+	// create scan config
+	input := &dynamodb.ScanInput{
+		TableName: aws.String(dt.table),
+		Limit:     aws.Int64(limit),
+	}
+
+	// add index to scan if supplied as an option
+	if options != nil {
+		optionMap := options[0].(map[string]string)
+		indexName, ok := optionMap["index"]
+		if ok {
+			input.IndexName = &indexName
+		}
+	}
 
 	// get first page of results
 	currentPage := int64(1)
-	results, err := dt.conn.Scan(&dynamodb.ScanInput{
-		TableName: aws.String(dt.table),
-		Limit:     aws.Int64(limit),
-	})
+	results, err := dt.conn.Scan(input)
 	if err != nil {
 		return err
 	}

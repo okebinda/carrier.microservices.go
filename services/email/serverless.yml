@@ -103,6 +103,7 @@ functions:
       API_KEY: ${self:custom.apiKey}
       DYNAMODB_ENDPOINT: ${self:custom.dynamoDBEndpoint}
       EMAILS_TABLE: ${self:custom.prefix}-${opt:stage,'dev'}-dt-emails
+      EMAIL_QUEUE_INDEX: ${self:custom.prefix}-${opt:stage,'dev'}-dt-emails-queue-idx
       SPARKPOST_API_KEY: ${self:custom.sparkPostAPIKey}
       SPARKPOST_BASE_URL: ${self:custom.sparkPostBaseURL}
       SPARKPOST_API_VERSION: ${self:custom.sparkPostAPIVersion}
@@ -125,7 +126,7 @@ resources:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
         GlobalSecondaryIndexes:
-          - IndexName: ${self:custom.prefix}-${opt:stage,'dev'}-dt-emails-idx-incomplete
+          - IndexName: ${self:custom.prefix}-${opt:stage,'dev'}-dt-emails-queue-idx
             KeySchema:
               - AttributeName: id
                 KeyType: HASH
