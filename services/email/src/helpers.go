@@ -24,6 +24,7 @@ func GetQueryParamInt64(r *http.Request, key string, def int64) (int64, error) {
 
 // SendEmail sends an email via the supplied service
 func SendEmail(exchange es.EmailExchange, email *Email, emailRepository *EmailRepository) bool {
+	var err error
 
 	sent := false
 
@@ -40,7 +41,7 @@ func SendEmail(exchange es.EmailExchange, email *Email, emailRepository *EmailRe
 	}
 
 	// send email and update record
-	err := exchange.Send(&exEmail)
+	err = exchange.Send(&exEmail) // comment out this line to mock sending an email successfully
 	if err != nil {
 		logger.Errorf("Email exchange error: %s\n", err)
 		changeSet["SendStatus"] = EmailStatusQueued

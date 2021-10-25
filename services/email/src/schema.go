@@ -12,8 +12,9 @@ type EmailRequestSchema struct {
 	Substitutions map[string]string `json:"substitutions"`
 	SendStatus    int               `json:"send_status" validate:"numeric,gte=1,lte=4"`
 	Queued        datetime.JSONTime `json:"queued"`
-	SendNow       *bool             `json:"send_now" validate:"required"`
-	ServiceID     string            `json:"service_id"`
+	// SendNow       *bool             `json:"send_now" validate:"required"`
+	Priority  int    `json:"priority" validate:"required,numeric,gte=0,lte=3"`
+	ServiceID string `json:"service_id"`
 }
 
 //BatchEmailRequestSchema defines the input shape and validation schema for
@@ -30,6 +31,7 @@ type EmailSchema struct {
 	Substitutions map[string]string `json:"substitutions"`
 	SendStatus    int               `json:"send_status"`
 	Queued        datetime.JSONTime `json:"queued"`
+	Priority      int               `json:"priority"`
 	Attempts      int               `json:"attempts"`
 	Accepted      int               `json:"accepted"`
 	Rejected      int               `json:"rejected"`
@@ -47,6 +49,7 @@ func (s *EmailSchema) load(m *Email) {
 	s.Substitutions = m.Substitutions
 	s.SendStatus = m.SendStatus
 	s.Queued = datetime.JSONTime(m.Queued)
+	s.Priority = m.Priority
 	s.Attempts = m.Attempts
 	s.Accepted = m.Accepted
 	s.Rejected = m.Rejected

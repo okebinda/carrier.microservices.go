@@ -117,7 +117,7 @@ resources:
         AttributeDefinitions:
           - AttributeName: id
             AttributeType: B
-          - AttributeName: queued
+          - AttributeName: 'priority_queued'
             AttributeType: S
         KeySchema:
           - AttributeName: id
@@ -130,7 +130,7 @@ resources:
             KeySchema:
               - AttributeName: id
                 KeyType: HASH
-              - AttributeName: queued
+              - AttributeName: 'priority_queued'
                 KeyType: RANGE
             Projection:
               ProjectionType: ALL

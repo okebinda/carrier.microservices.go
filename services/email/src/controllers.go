@@ -99,11 +99,12 @@ func PostEmails(w http.ResponseWriter, r *http.Request) {
 			Recipients:    emailPayload.Recipients,
 			Template:      emailPayload.Template,
 			Substitutions: emailPayload.Substitutions,
+			Priority:      emailPayload.Priority,
 			Queued:        time.Now(),
 		}
 
 		// set status differently if sending email now or later
-		if *emailPayload.SendNow == true {
+		if emailPayload.Priority == 0 {
 			email.SendStatus = EmailStatusProcessing
 		} else {
 			email.SendStatus = EmailStatusQueued
@@ -118,7 +119,7 @@ func PostEmails(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// send email now
-		if *emailPayload.SendNow == true {
+		if emailPayload.Priority == 0 {
 
 			logger.Debugw("Sending email synchronously")
 
@@ -221,6 +222,7 @@ func UpdateEmail(w http.ResponseWriter, r *http.Request) {
 		"template":      payload.Template,
 		"substitutions": payload.Substitutions,
 		"send_status":   payload.SendStatus,
+		"priority":      payload.Priority,
 		"queued":        time.Time(payload.Queued),
 	}
 
@@ -238,7 +240,7 @@ func UpdateEmail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// send email now
-	if *payload.SendNow == true {
+	if payload.Priority == 0 {
 
 		logger.Debugw("Sending email synchronously")
 

@@ -156,10 +156,17 @@ func (dt *DynamoDBTable) Update(key uuid.UUID, castTo interface{}, changeSet Cha
 		placeholder := fmt.Sprintf(":%s", k)
 		switch v.(type) {
 		case string:
-			updateAttributes[placeholder] = &dynamodb.AttributeValue{
-				S: aws.String(v.(string)),
+			val := v.(string)
+			if val == "" {
+				// remove empty strings
+				// why? sparse indexing: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/bp-indexes-general-sparse-indexes.html
+				removeAttributes = append(removeAttributes, k)
+			} else {
+				updateAttributes[placeholder] = &dynamodb.AttributeValue{
+					S: aws.String(val),
+				}
+				updateExpressions = append(updateExpressions, fmt.Sprintf("%s=:%s", k, k))
 			}
-			updateExpressions = append(updateExpressions, fmt.Sprintf("%s=:%s", k, k))
 		case int:
 			updateAttributes[placeholder] = &dynamodb.AttributeValue{
 				N: aws.String(strconv.Itoa(v.(int))),

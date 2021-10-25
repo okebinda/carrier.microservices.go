@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"time"
 
+	"carrier.microservices.go/src/lib/datetime"
 	"carrier.microservices.go/src/lib/store"
 	"github.com/google/uuid"
 )
@@ -24,19 +26,21 @@ const (
 
 // Email is an email entity
 type Email struct {
-	ID            uuid.UUID         `json:"id"`
-	ServiceID     string            `json:"service_id"`
-	Recipients    []string          `json:"recipients"`
-	Template      string            `json:"template"`
-	Substitutions map[string]string `json:"substitutions"`
-	SendStatus    int               `json:"send_status"`
-	Queued        time.Time         `json:"queued"`
-	Attempts      int               `json:"attempts"`
-	Accepted      int               `json:"accepted"`
-	Rejected      int               `json:"rejected"`
-	LastAttemptAt time.Time         `json:"last_attempt_at"`
-	CreatedAt     time.Time         `json:"created_at"`
-	UpdatedAt     time.Time         `json:"updated_at"`
+	ID             uuid.UUID         `json:"id"`
+	ServiceID      string            `json:"service_id"`
+	Recipients     []string          `json:"recipients"`
+	Template       string            `json:"template"`
+	Substitutions  map[string]string `json:"substitutions"`
+	SendStatus     int               `json:"send_status"`
+	Queued         time.Time         `json:"queued"`
+	Priority       int               `json:"priority"`
+	PriorityQueued string            `json:"priority_queued"`
+	Attempts       int               `json:"attempts"`
+	Accepted       int               `json:"accepted"`
+	Rejected       int               `json:"rejected"`
+	LastAttemptAt  time.Time         `json:"last_attempt_at"`
+	CreatedAt      time.Time         `json:"created_at"`
+	UpdatedAt      time.Time         `json:"updated_at"`
 }
 
 // EmailRepository stores and fetches items
@@ -63,6 +67,11 @@ func (r *EmailRepository) Store(email *Email) error {
 	email.ID = uuid.New()
 	email.CreatedAt = time.Now()
 	email.UpdatedAt = time.Now()
+	if !email.Queued.IsZero() {
+		email.PriorityQueued = fmt.Sprintf("%d#%s", email.Priority, email.Queued.Format(datetime.ISO8601Datetime))
+	} else {
+		email.PriorityQueued = ""
+	}
 	return r.datastore.Store(email)
 }
 
@@ -78,6 +87,12 @@ func (r *EmailRepository) Get(id uuid.UUID) (*Email, error) {
 // Update an existing email
 func (r *EmailRepository) Update(email *Email, changeSet store.ChangeSet) error {
 	changeSet["updated_at"] = time.Now()
+	if !email.Queued.IsZero() {
+		email.PriorityQueued = fmt.Sprintf("%d#%s", email.Priority, email.Queued.Format(datetime.ISO8601Datetime))
+	} else {
+		email.PriorityQueued = ""
+	}
+	changeSet["priority_queued"] = email.PriorityQueued
 	return r.datastore.Update(email.ID, email, changeSet)
 }
 
