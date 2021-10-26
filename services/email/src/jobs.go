@@ -7,6 +7,8 @@ import (
 	emailService "carrier.microservices.go/src/lib/email"
 	"carrier.microservices.go/src/lib/store"
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
 )
 
 // EmailQueue ...
@@ -19,7 +21,19 @@ func EmailQueue(ctx context.Context, cloudWatchEvent events.CloudWatchEvent) {
 	emailRepository := NewEmailRepository(store.NewDynamoDBTable(db, os.Getenv("EMAILS_TABLE")))
 
 	// retrieve a list of queued emails
-	emails, err := emailRepository.List(1, 50, map[string]string{"index": os.Getenv("EMAIL_QUEUE_INDEX")})
+	emails, err := emailRepository.List(
+		1,
+		50,
+		map[string]interface{}{
+			"index": os.Getenv("EMAIL_QUEUE_INDEX"),
+			"query": "send_status = :send_status",
+			"expressionAttributeValues": map[string]*dynamodb.AttributeValue{
+				":send_status": {
+					N: aws.String("1"),
+				},
+			},
+		},
+	)
 	if err != nil {
 		logger.Errorf("List queued emails error: %v", err)
 		return

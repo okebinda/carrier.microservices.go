@@ -43,46 +43,105 @@ func NewDynamoDBTable(conn *dynamodb.DynamoDB, table string) *DynamoDBTable {
 
 // List gets a collection of resources
 func (dt *DynamoDBTable) List(castTo interface{}, page, limit int64, options ...interface{}) error {
+	var optionMap map[string]interface{}
+	var indexName, queryOption string
+	var expressionAttributeValues map[string]*dynamodb.AttributeValue
+	var ok bool
 
-	// create scan config
-	input := &dynamodb.ScanInput{
-		TableName: aws.String(dt.table),
-		Limit:     aws.Int64(limit),
+	// flag to control DynamoDB query or scan behavior
+	isQuery := false
+
+	// parse options if provided
+	if options != nil {
+		optionMap = options[0].(map[string]interface{})
+		if queryOption, ok = optionMap["query"].(string); ok && queryOption != "" {
+			isQuery = true
+		}
+		indexName, _ = optionMap["index"].(string)
+		expressionAttributeValues, _ = optionMap["expressionAttributeValues"].(map[string]*dynamodb.AttributeValue)
 	}
 
-	// add index to scan if supplied as an option
-	if options != nil {
-		optionMap := options[0].(map[string]string)
-		indexName, ok := optionMap["index"]
-		if ok {
+	if isQuery {
+
+		// perform DynamoDB QUERY
+
+		// create query config
+		input := &dynamodb.QueryInput{
+			TableName:                 aws.String(dt.table),
+			Limit:                     aws.Int64(limit),
+			KeyConditionExpression:    aws.String(queryOption),
+			ExpressionAttributeValues: expressionAttributeValues,
+		}
+
+		if indexName != "" {
 			input.IndexName = &indexName
 		}
-	}
 
-	// get first page of results
-	currentPage := int64(1)
-	results, err := dt.conn.Scan(input)
-	if err != nil {
-		return err
-	}
-
-	// support for pagination: beyond page 1
-	for currentPage < page && len(results.LastEvaluatedKey) > 0 {
-		results, err = dt.conn.Scan(&dynamodb.ScanInput{
-			TableName:         aws.String(dt.table),
-			Limit:             aws.Int64(limit),
-			ExclusiveStartKey: results.LastEvaluatedKey,
-		})
+		// get first page of results
+		currentPage := int64(1)
+		results, err := dt.conn.Query(input)
 		if err != nil {
 			return err
 		}
-		currentPage++
+
+		// support for pagination: beyond page 1
+		for currentPage < page && len(results.LastEvaluatedKey) > 0 {
+			results, err = dt.conn.Query(&dynamodb.QueryInput{
+				TableName:         aws.String(dt.table),
+				Limit:             aws.Int64(limit),
+				ExclusiveStartKey: results.LastEvaluatedKey,
+			})
+			if err != nil {
+				return err
+			}
+			currentPage++
+		}
+
+		// populate output with results
+		if err := dynamodbattribute.UnmarshalListOfMaps(results.Items, &castTo); err != nil {
+			return err
+		}
+
+	} else {
+
+		// perform DynamoDB SCAN
+
+		// create scan config
+		input := &dynamodb.ScanInput{
+			TableName: aws.String(dt.table),
+			Limit:     aws.Int64(limit),
+		}
+
+		if indexName != "" {
+			input.IndexName = &indexName
+		}
+
+		// get first page of results
+		currentPage := int64(1)
+		results, err := dt.conn.Scan(input)
+		if err != nil {
+			return err
+		}
+
+		// support for pagination: beyond page 1
+		for currentPage < page && len(results.LastEvaluatedKey) > 0 {
+			results, err = dt.conn.Scan(&dynamodb.ScanInput{
+				TableName:         aws.String(dt.table),
+				Limit:             aws.Int64(limit),
+				ExclusiveStartKey: results.LastEvaluatedKey,
+			})
+			if err != nil {
+				return err
+			}
+			currentPage++
+		}
+
+		// populate output with results
+		if err := dynamodbattribute.UnmarshalListOfMaps(results.Items, &castTo); err != nil {
+			return err
+		}
 	}
 
-	// populate output with results
-	if err := dynamodbattribute.UnmarshalListOfMaps(results.Items, &castTo); err != nil {
-		return err
-	}
 	return nil
 }
 

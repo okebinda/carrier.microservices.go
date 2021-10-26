@@ -117,6 +117,8 @@ resources:
         AttributeDefinitions:
           - AttributeName: id
             AttributeType: B
+          - AttributeName: send_status
+            AttributeType: N
           - AttributeName: 'priority_queued'
             AttributeType: S
         KeySchema:
@@ -128,7 +130,7 @@ resources:
         GlobalSecondaryIndexes:
           - IndexName: ${self:custom.prefix}-${opt:stage,'dev'}-dt-emails-queue-idx
             KeySchema:
-              - AttributeName: id
+              - AttributeName: send_status
                 KeyType: HASH
               - AttributeName: 'priority_queued'
                 KeyType: RANGE
