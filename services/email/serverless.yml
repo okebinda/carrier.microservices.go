@@ -12,6 +12,10 @@ frameworkVersion: '2'
 # @todo: remove once upgraded to v3
 useDotenv: true
 
+# enable v3 configuration validation while using v2
+# @todo: remove once upgraded to v3
+configValidationMode: error
+
 plugins:
   - serverless-dynamodb-local
 
@@ -27,6 +31,10 @@ custom:
   sparkPostAPIKey: ${env:SPARKPOST_API_KEY, ""}
   sparkPostBaseURL: ${env:SPARKPOST_BASE_URL, "https://api.sparkpost.com"}
   sparkPostAPIVersion: ${env:SPARKPOST_API_VERSION, "1"}
+  tableReadCapacityUnits: ${env:TABLE_READ_CAPACITY_UINTS, "1"}
+  tableWriteCapacityUnits: ${env:TABLE_WRITE_CAPACITY_UINTS, "1"}
+  indexReadCapacityUnits: ${env:INDEX_READ_CAPACITY_UINTS, "1"}
+  indexWriteCapacityUnits: ${env:INDEX_WRITE_CAPACITY_UINTS, "1"}
   dynamodb:
     stages:
       - dev
@@ -57,6 +65,14 @@ provider:
         - dynamodb:DeleteItem
       Resource:
         - "Fn::GetAtt": [ emailsTable, Arn ]
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+      Resource:
+        - !Sub
+          - "${TableARN}/index/*"
+          - TableARN: !GetAtt [ emailsTable, Arn ]
 
 package:
   patterns:
@@ -125,8 +141,8 @@ resources:
           - AttributeName: id
             KeyType: HASH
         ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
+          ReadCapacityUnits: ${self:custom.tableReadCapacityUnits}
+          WriteCapacityUnits: ${self:custom.tableWriteCapacityUnits}
         GlobalSecondaryIndexes:
           - IndexName: ${self:custom.prefix}-${opt:stage,'dev'}-dt-emails-queue-idx
             KeySchema:
@@ -137,7 +153,5 @@ resources:
             Projection:
               ProjectionType: ALL
             ProvisionedThroughput:
-              ReadCapacityUnits: 1
-              WriteCapacityUnits: 1
-
-# https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/bp-indexes-general-sparse-indexes.html
+              ReadCapacityUnits: ${self:custom.indexReadCapacityUnits}
+              WriteCapacityUnits: ${self:custom.indexWriteCapacityUnits}

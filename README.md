@@ -119,7 +119,7 @@ $ sls invoke local --function email --data '{"httpMethod":"GET", "path":"emails"
 
 ```ssh
 $ cd /workspace/services/email
-$ sls invoke local --function email --data '{"httpMethod":"POST", "path":"emails", "body":"{\"emails\":[{\"recipients\":[\"test@test.com\"],\"template\":\"template-1\",\"substitutions\":{\"key1\":\"value 1\",\"key2\":\"value 2\"},\"send_now\":false}]}", "queryStringParameters": {}}'
+$ sls invoke local --function email --data '{"httpMethod":"POST", "path":"emails", "body":"{\"emails\":[{\"recipients\":[\"test@test.com\"],\"template\":\"template-1\",\"substitutions\":{\"key1\":\"value 1\",\"key2\":\"value 2\"},\"priority\":0}]}", "queryStringParameters": {}}'
 ```
 
 ```ssh
