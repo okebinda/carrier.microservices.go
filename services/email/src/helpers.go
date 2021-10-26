@@ -44,18 +44,18 @@ func SendEmail(exchange es.EmailExchange, email *Email, emailRepository *EmailRe
 	err = exchange.Send(&exEmail) // comment out this line to mock sending an email successfully
 	if err != nil {
 		logger.Errorf("Email exchange error: %s\n", err)
-		changeSet["SendStatus"] = EmailStatusQueued
+		changeSet["send_status"] = EmailStatusQueued
 	} else {
 		logger.Debugw("SparkPost transmission successful.")
 		email.Queued = time.Time{}
 		changeSet["send_status"] = EmailStatusComplete
 		changeSet["service_id"] = exEmail.ID
-		changeSet["last_attempt_at"] = exEmail.LastAttemptAt
 		changeSet["accepted"] = exEmail.Accepted
 		changeSet["rejected"] = exEmail.Rejected
 		changeSet["queued"] = email.Queued
 		sent = true
 	}
+	changeSet["last_attempt_at"] = exEmail.LastAttemptAt
 
 	// save again with transmission data
 	err = emailRepository.Update(email, changeSet)
