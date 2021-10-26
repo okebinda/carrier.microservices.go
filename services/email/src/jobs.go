@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/google/uuid"
 )
 
 // EmailQueue ...
@@ -39,10 +40,15 @@ func EmailQueue(ctx context.Context, cloudWatchEvent events.CloudWatchEvent) {
 		return
 	}
 
-	logger.Debugf("Queued emails: %v", emails)
-
 	// if have emails in queue send
 	if len(emails) > 0 {
+
+		var emailIDs []uuid.UUID
+		for _, email := range emails {
+			emailIDs = append(emailIDs, email.ID)
+		}
+		logger.Debugf("Queued emails: (%d) %v", len(emailIDs), emailIDs)
+
 		emailExchange = &emailService.SparkPostExchange{}
 		err = emailExchange.Init()
 		if err != nil {
