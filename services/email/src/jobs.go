@@ -22,9 +22,9 @@ func EmailQueue(ctx context.Context, cloudWatchEvent events.CloudWatchEvent) {
 
 	logger.Debugf("CloudWatch event: EmailQueue: %+v", cloudWatchEvent)
 
-	limit := 25
+	limit, _ := strconv.Atoi(os.Getenv("JOB_SEND_LIMIT"))
+	attemptLimit, _ := strconv.Atoi(os.Getenv("RETRY_LIMIT"))
 	counter := 0
-	attemptLimit := 5
 	continueLoop := true
 	exchangeInitialized := false
 

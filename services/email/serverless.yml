@@ -31,10 +31,13 @@ custom:
   sparkPostAPIKey: ${env:SPARKPOST_API_KEY, ""}
   sparkPostBaseURL: ${env:SPARKPOST_BASE_URL, "https://api.sparkpost.com"}
   sparkPostAPIVersion: ${env:SPARKPOST_API_VERSION, "1"}
+  functionTimeout: ${env:FUNCTION_TIMEOUT, "180"}
   tableReadCapacityUnits: ${env:TABLE_READ_CAPACITY_UINTS, "1"}
   tableWriteCapacityUnits: ${env:TABLE_WRITE_CAPACITY_UINTS, "1"}
   indexReadCapacityUnits: ${env:INDEX_READ_CAPACITY_UINTS, "1"}
   indexWriteCapacityUnits: ${env:INDEX_WRITE_CAPACITY_UINTS, "1"}
+  jobSendLimit: ${env:JOB_SEND_LIMIT, "25"}
+  retryLimit: ${env:RETRY_LIMIT, "5"}
   dynamodb:
     stages:
       - dev
@@ -82,6 +85,7 @@ package:
 functions:
   email:
     handler: bin/email
+    timeout: ${self:custom.functionTimeout}
     events:
       - http:
           path: /emails
@@ -123,6 +127,8 @@ functions:
       SPARKPOST_API_KEY: ${self:custom.sparkPostAPIKey}
       SPARKPOST_BASE_URL: ${self:custom.sparkPostBaseURL}
       SPARKPOST_API_VERSION: ${self:custom.sparkPostAPIVersion}
+      JOB_SEND_LIMIT: ${self:custom.jobSendLimit}
+      RETRY_LIMIT: ${self:custom.retryLimit}
 
 resources:
   Resources:
