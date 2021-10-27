@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"math"
 	"os"
+	"strconv"
 	"time"
 
 	emailService "carrier.microservices.go/src/lib/email"
@@ -58,7 +60,7 @@ func EmailQueue(ctx context.Context, cloudWatchEvent events.CloudWatchEvent) {
 					"query": "send_status = :send_status",
 					"expressionAttributeValues": map[string]*dynamodb.AttributeValue{
 						":send_status": {
-							N: aws.String("1"),
+							N: aws.String(strconv.Itoa(EmailStatusQueued)),
 						},
 					},
 				},
@@ -80,25 +82,42 @@ func EmailQueue(ctx context.Context, cloudWatchEvent events.CloudWatchEvent) {
 				// loop over queued emails and send
 				for _, email := range emails {
 
-					// set email status to processing
-					err = emailRepository.Update(email, store.ChangeSet{"send_status": EmailStatusProcessing})
-					if err != nil {
-						logger.Errorf("Unable to update email: %v", err)
-					}
+					// is it time to send this email?
+					if time.Now().After(email.Queued) {
 
-					// send email
-					if sent := SendEmail(emailExchange, email, emailRepository); !sent {
+						// set email status to processing
+						err = emailRepository.Update(email, store.ChangeSet{"send_status": EmailStatusProcessing})
+						if err != nil {
+							logger.Errorf("Unable to update email: %v", err)
+						}
 
-						// failed too many times, do not attempt again
-						if email.Attempts >= attemptLimit {
-							err = emailRepository.Update(email, store.ChangeSet{
-								"send_status": EmailStatusFailed,
-								"queued":      time.Time{},
-							})
-							if err != nil {
-								logger.Errorf("Unable to update email: %v", err)
+						// send email
+						if sent := SendEmail(emailExchange, email, emailRepository); !sent {
+
+							if email.Attempts >= attemptLimit {
+
+								// failed too many times, do not attempt again
+								err = emailRepository.Update(email, store.ChangeSet{
+									"send_status": EmailStatusFailed,
+									"queued":      time.Time{},
+								})
+								if err != nil {
+									logger.Errorf("Unable to update email: %v", err)
+								}
+							} else {
+
+								// update `queued` attribute with new date to push it back in the queue
+								err = emailRepository.Update(email, store.ChangeSet{
+									"queued": nextAttemptDate(email),
+								})
+								if err != nil {
+									logger.Errorf("Unable to update email: %v", err)
+								}
 							}
 						}
+					} else {
+						continueLoop = false // remaining emails in queue are not scheduled yet
+						break
 					}
 				}
 			} else {
@@ -108,4 +127,9 @@ func EmailQueue(ctx context.Context, cloudWatchEvent events.CloudWatchEvent) {
 			continueLoop = false // email exchange not initialized unexpectedly
 		}
 	}
+}
+
+// nextAttemptDate generates the the next time to attempt a send using a backoff algorithm
+func nextAttemptDate(email *Email) time.Time {
+	return email.Queued.Add(time.Minute * time.Duration(math.Pow(2, float64(email.Attempts))))
 }
