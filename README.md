@@ -31,7 +31,7 @@ The service uses Sparkpost (https://www.sparkpost.com/) to deliver emails, but o
 
 ### Configure
 
-The service uses `.env` files to configure custom values in the `serverless.yml` configuration file. It is recommended to create `.env` files for each environment (development, staging, production, etc.). Local development uses `.env`. Use a [template](.env.template) similar to the following (make sure to change the values to reflect your situation):
+The service uses `.env` files to configure custom values in the `serverless.yml` configuration file. It is recommended to create `.env` files for each environment (development, staging, production, etc.). Local development uses `.env`. Use a [template](services/email/.env.template) similar to the following (make sure to change the values to reflect your situation):
 
 ```
 DOMAIN=domain.com
