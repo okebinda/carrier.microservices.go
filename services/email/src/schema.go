@@ -12,9 +12,8 @@ type EmailRequestSchema struct {
 	Substitutions map[string]string `json:"substitutions"`
 	SendStatus    int               `json:"send_status" validate:"numeric,gte=1,lte=4"`
 	Queued        datetime.JSONTime `json:"queued"`
-	// SendNow       *bool             `json:"send_now" validate:"required"`
-	Priority  int    `json:"priority" validate:"required,numeric,gte=0,lte=3"`
-	ServiceID string `json:"service_id"`
+	Priority      int               `json:"priority" validate:"required,numeric,gte=0,lte=3"`
+	ServiceID     string            `json:"service_id"`
 }
 
 //BatchEmailRequestSchema defines the input shape and validation schema for

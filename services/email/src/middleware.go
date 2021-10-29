@@ -41,7 +41,7 @@ func Authorize(next http.Handler) http.Handler {
 		// check API key
 		ok := authentication(r)
 		if !ok {
-			userErrorResponse(w, 403, "Permission denied.")
+			userErrorResponse(w, 401, "Permission denied.")
 			return
 		}
 

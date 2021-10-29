@@ -38,7 +38,7 @@ func GetEmails(w http.ResponseWriter, r *http.Request) {
 	emails, err := emailRepository.List(page, limit)
 	if err != nil {
 		logger.Errorf("List emails error: %v", err)
-		userErrorResponse(w, 404, "Not found")
+		serverErrorResponse(w)
 		return
 	}
 
