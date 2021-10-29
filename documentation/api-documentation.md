@@ -532,5 +532,5 @@ Use the following to delete an existing email.
 ###### Request
 
 ```ssh
-curl -X DELETE https://1234abcd.execute-api.us-east-1.amazonaws.com/production/emails
+curl -X DELETE https://1234abcd.execute-api.us-east-1.amazonaws.com/production/email/cca8ebdd-b7ad-4b2b-827c-83353de62262
 ```
